@@ -4,126 +4,190 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>工程管理</title>
+<link rel="icon" type="image/png" href="aikon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="工程管理">
+<meta name="theme-color" content="#3f5df0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#eef1f4;--card:#fff;--ink:#1b2430;--sub:#5c6b7a;--line:#d5dbe2;--acc:#0f7b8a;--accink:#fff;--ok:#1f8a4c;--warn:#c2410c;
-box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12181f;--card:#1c242d;--ink:#e8edf2;--sub:#93a1af;--line:#2d3844;--acc:#3cb6c6;--accink:#06222a;--ok:#4cc27f;--warn:#f08a5d}}
-:root[data-theme="dark"]{--bg:#12181f;--card:#1c242d;--ink:#e8edf2;--sub:#93a1af;--line:#2d3844;--acc:#3cb6c6;--accink:#06222a;--ok:#4cc27f;--warn:#f08a5d}
+:root{--bg:#f2f4fb;--card:#fff;--ink:#141a3d;--sub:#65708f;--line:#e2e6f3;--acc:#3f5df0;--accink:#fff;--ok:#12915a;--warn:#c8540a;--g1:#38aef7;--g2:#4f46e5;--tagt:#e6ecff;--tagtc:#2f48d0;--tagg:#dff5ec;--taggc:#0d7a4f;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root{--bg:#0c1020;--card:#161b34;--ink:#eaeeff;--sub:#98a2c8;--line:#262d50;--acc:#7c94ff;--accink:#0c1020;--ok:#4ed19a;--warn:#f59a63;--tagt:#232c66;--tagtc:#b5c3ff;--tagg:#12382c;--taggc:#7fe3b8}}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic",system-ui,sans-serif;font-variant-numeric:tabular-nums;line-height:1.5}
-main{max-width:520px;margin:0 auto;padding:16px}
-.clock{display:flex;justify-content:space-between;align-items:baseline;color:var(--sub);font-size:14px}
-.clock b{font-size:34px;color:var(--ink);font-weight:600;letter-spacing:.02em}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:14px}
-h2{font-size:14px;margin:0 0 8px;color:var(--sub);font-weight:600}
-.now{font-size:26px;font-weight:700;margin:2px 0}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP","Yu Gothic",system-ui,sans-serif;font-variant-numeric:tabular-nums;line-height:1.55}
+main{max-width:520px;margin:0 auto;padding:14px 16px 118px}
+.top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px}
+.top #date{color:var(--sub);font-size:14px;font-weight:500}
+.top b{display:block;font-size:40px;font-weight:900;letter-spacing:.01em;line-height:1.1}
+.pill{font-size:12px;font-weight:700;padding:5px 11px;border-radius:99px;background:var(--line);color:var(--sub)}
+.pill.on{background:var(--tagg);color:var(--taggc)}
+.hero{background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;border-radius:28px;padding:22px;box-shadow:0 16px 32px -14px rgba(79,70,229,.6)}
+.hero h2{color:rgba(255,255,255,.8);margin:0 0 4px}
+.hero .meta{color:rgba(255,255,255,.85)}
+.hero .big{background:#fff;color:#3a3fd8}
+.hero .ghost{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.35);color:#fff}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:14px}
+h2{font-size:13px;margin:0 0 8px;color:var(--sub);font-weight:700}
+h3{font-size:17px;margin:0 0 4px;font-weight:900}
+.now{font-size:30px;font-weight:900;margin:2px 0;line-height:1.25}
 .meta{color:var(--sub);font-size:14px}
-.big{width:100%;margin-top:14px;padding:18px;border:0;border-radius:10px;background:var(--acc);color:var(--accink);font-size:18px;font-weight:700;cursor:pointer}
+.big{width:100%;margin-top:14px;padding:17px;border:0;border-radius:14px;background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;font:inherit;font-size:17px;font-weight:900;cursor:pointer}
 .big:active{transform:scale(.99)}
-button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
-.ghost{background:none;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 12px;font-size:14px;cursor:pointer}
+.big:disabled{opacity:.6}
+button{font-family:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.ghost{background:none;border:1px solid var(--line);color:var(--ink);border-radius:12px;padding:9px 14px;font-size:14px;font-weight:500;cursor:pointer}
 .row{display:flex;gap:8px;align-items:center}
 .list{list-style:none;margin:0;padding:0}
-.list li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-top:1px solid var(--line)}
+.list li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 0;border-top:1px solid var(--line)}
 .list li:first-child{border-top:0}
-.list .cur{font-weight:700;color:var(--acc)}
-input[type=text],input[type=time],input[type=date]{flex:1;min-width:0;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:16px}
-.tabs{display:flex;gap:8px;margin-top:14px}
-.tabs .ghost{flex:1}
+.list .cur{font-weight:900;color:var(--acc)}
+input[type=text],input[type=time],input[type=date],select{flex:1;min-width:0;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);font:inherit;font-size:16px}
+select{width:100%}
+label.fl{display:block;font-size:13px;color:var(--sub);font-weight:700;margin:12px 0 4px}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:99px;margin-right:4px;vertical-align:1px;background:var(--tagt);color:var(--tagtc)}
+.tag.g{background:var(--tagg);color:var(--taggc)}
+.sec{display:flex;align-items:center;gap:6px;margin:16px 0 4px}
+.sec:first-of-type{margin-top:0}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{position:relative;width:42px;height:42px;display:grid;place-items:center;border:1px solid var(--line);border-radius:12px;font-weight:700;cursor:pointer;background:var(--bg)}
+.chip input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.chip:has(input:checked){background:var(--acc);color:var(--accink);border-color:var(--acc)}
+.chip:has(input:focus-visible){outline:3px solid var(--acc);outline-offset:2px}
 .ok{color:var(--ok)}.warn{color:var(--warn)}
 .bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:6px}
-.bar i{display:block;height:100%;background:var(--acc)}
-.sum{font-size:32px;font-weight:700}
-.wrap{overflow-x:auto}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--g1),var(--g2))}
+.sum{font-size:32px;font-weight:900}
+.note{background:var(--bg);border-radius:12px;padding:10px 12px;font-size:13px;color:var(--sub);margin-top:8px}
+nav.tabs{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));max-width:496px;margin:0 auto;display:flex;gap:4px;padding:6px;background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:0 10px 30px -10px rgba(20,26,61,.35)}
+nav.tabs button{flex:1;border:0;background:none;color:var(--sub);padding:11px 0;border-radius:16px;font-size:14px;font-weight:700;cursor:pointer}
+nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <main>
-  <div class="clock"><span id="date"></span><b id="clock"></b></div>
+  <header class="top"><div><span id="date"></span><b id="clock"></b></div><span class="pill" id="pill">未連携</span></header>
 
-  <section class="card">
-    <h2>Googleカレンダー連携</h2>
-    <div class="meta" id="gcalstatus">未連携</div>
-    <button class="ghost" id="gcalbtn" style="margin-top:8px">連携する</button>
-  </section>
+  <div id="p-home">
+    <section class="hero" id="nowcard">
+      <h2 id="nowlabel">いま</h2>
+      <div class="now" id="nowname"></div>
+      <div class="meta" id="nowmeta"></div>
+      <div class="meta" id="nowdetail" style="white-space:pre-wrap;margin-top:6px"></div>
+      <button class="big" id="mainbtn"></button>
+      <button class="ghost" id="stopbtn" style="width:100%;margin-top:10px;padding:14px" hidden>中断する</button>
+    </section>
 
-  <section class="card" id="nowcard">
-    <h2 id="nowlabel">いま</h2>
-    <div class="now" id="nowname"></div>
-    <div class="meta" id="nowmeta"></div>
-    <div class="meta" id="nowdetail" style="white-space:pre-wrap;margin-top:6px"></div>
-    <button class="big" id="mainbtn"></button>
-    <button class="ghost" id="stopbtn" style="width:100%;margin-top:10px;padding:14px" hidden>いまのを終了する</button>
-  </section>
+    <section class="card">
+      <h2>割り込み(予定にないこと)</h2>
+      <div class="row">
+        <input type="text" id="ad" placeholder="例: 電話対応、買い物" maxlength="30">
+        <button class="ghost" id="adbtn">開始</button>
+      </div>
+    </section>
 
-  <section class="card">
-    <h2>割り込み(予定にないこと)</h2>
-    <div class="row">
-      <input type="text" id="ad" placeholder="例: 電話対応、買い物" maxlength="30">
-      <button class="ghost" id="adbtn">開始</button>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2>予定を追加(その日だけ・Googleカレンダーへ)</h2>
-    <div class="meta" id="addnote"></div>
-    <div class="row" style="margin-top:8px;flex-wrap:wrap">
-      <input type="date" id="addDate" style="flex-basis:100%">
-      <input type="time" id="addStart">
-      <span class="meta">〜</span>
-      <input type="time" id="addEnd">
-    </div>
-    <div class="row" style="margin-top:8px">
-      <input type="text" id="addTitle" placeholder="タイトル" maxlength="50">
-    </div>
-    <div class="row" style="margin-top:8px">
-      <input type="text" id="addDetail" placeholder="詳細(住所やメモなど・任意)" maxlength="300">
-    </div>
-    <button class="big" id="addbtn" style="margin-top:10px">この予定を追加</button>
-  </section>
-
-  <div class="tabs">
-    <button class="ghost" id="tabtasks">予定を切り替える</button>
-    <button class="ghost" id="tabres">リザルト</button>
+    <section class="card" id="tasks">
+      <h3>きょうの予定</h3>
+      <div class="sec"><span class="tag">メイン</span><span class="meta">毎日くり返す自分用のタスク</span></div>
+      <ul class="list" id="tasklist"></ul>
+      <div class="sec"><span class="tag g">カレンダー</span><span class="meta">Googleカレンダーの今日の予定(30秒ごとに更新)</span></div>
+      <ul class="list" id="gcaltasklist"></ul>
+    </section>
   </div>
 
-  <section class="card" id="tasks" hidden>
-    <h2>今日の予定(タップでそのタスクを開始)</h2>
-    <ul class="list" id="tasklist"></ul>
-    <h2 style="margin-top:14px">Googleカレンダー側の予定(今日)</h2>
-    <ul class="list" id="gcaltasklist"></ul>
-    <div class="row" style="margin-top:12px"><button class="ghost" id="editbtn">予定を編集</button></div>
-  </section>
+  <div id="p-main" hidden>
+    <section class="card" style="margin-top:0">
+      <h3><span class="tag">メイン</span>メインタスク</h3>
+      <div class="meta">毎日同じ時間にくり返すタスク。この端末に保存され、連携中はGoogleにも自動でバックアップされる。</div>
+      <ul class="list" id="editlist" style="margin-top:8px"></ul>
+      <div class="row" style="margin-top:12px;flex-wrap:wrap">
+        <button class="ghost" id="addtask">+ タスクを追加</button>
+        <button class="ghost" id="canceledit">変更を戻す</button>
+        <button class="big" id="savetasks" style="margin:0;padding:12px;flex:1">保存</button>
+      </div>
+      <div class="meta" id="savemsg" style="margin-top:8px"></div>
+      <div class="note" id="bkstatus">バックアップ: Google未連携</div>
+    </section>
+  </div>
 
-  <section class="card" id="edit" hidden>
-    <h2>予定を編集</h2>
-    <ul class="list" id="editlist"></ul>
-    <div class="row" style="margin-top:12px;flex-wrap:wrap">
-      <button class="ghost" id="addtask">追加</button>
-      <button class="ghost" id="defaults">初期に戻す</button>
-      <button class="ghost" id="canceledit">キャンセル</button>
-      <button class="big" id="savetasks" style="margin:0;padding:12px;flex:1">保存</button>
-    </div>
-  </section>
+  <div id="p-cal" hidden>
+    <section class="card" style="margin-top:0">
+      <h3><span class="tag g">カレンダー</span>Googleカレンダー</h3>
+      <div class="meta" id="gcalstatus">未連携</div>
+      <button class="ghost" id="gcalbtn" style="margin-top:8px">Googleと連携する</button>
+    </section>
 
-  <section class="card" id="res" hidden>
-    <h2>今日のリザルト</h2>
-    <div class="sum" id="score"></div>
-    <div class="meta" id="scoremeta"></div>
-    <ul class="list" id="reslist"></ul>
-    <h2 style="margin-top:14px">割り込み・ログ</h2>
-    <ul class="list" id="loglist"></ul>
-    <div class="row" style="margin-top:12px;flex-wrap:wrap">
-      <button class="big" id="copybtn" style="margin:0;padding:12px;flex:1">リザルトをコピー(AI用)</button>
-      <button class="ghost" id="reset">今日の記録を消す</button>
-      <button class="ghost" id="resetall">全データを削除</button>
-    </div>
-    <div class="meta" id="copymsg" style="margin-top:8px"></div>
-    <textarea id="copyarea" hidden readonly style="width:100%;height:160px;margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:14px"></textarea>
-  </section>
+    <section class="card">
+      <h3><span class="tag g">カレンダー</span>予定を追加</h3>
+      <div class="meta">ここで追加した予定はGoogleカレンダーに保存される。毎日のメインタスクとは別もの。</div>
+      <div class="meta warn" id="addnote"></div>
+      <div class="meta ok" id="addmsg"></div>
+      <button class="big" id="addopen" style="margin-top:10px">+ 予定を追加する</button>
+    </section>
+
+    <section class="card" id="addform" hidden>
+      <label class="fl" for="addMode" style="margin-top:0">くり返し方</label>
+      <select id="addMode">
+        <option value="once">1日だけ</option>
+        <option value="span">何日から何日まで(続けて1つの予定)</option>
+        <option value="daily">期間中、毎日同じ時間</option>
+        <option value="weekly">毎週(曜日を選ぶ)</option>
+        <option value="monthly">毎月(同じ日にち)</option>
+      </select>
+      <div class="row" style="margin-top:12px;align-items:flex-end">
+        <div style="flex:1"><label class="fl" for="addDate" style="margin-top:0">開始日</label><input type="date" id="addDate" style="width:100%"></div>
+        <div style="flex:1" id="d2wrap"><label class="fl" for="addDate2" id="d2label" style="margin-top:0">終了日</label><input type="date" id="addDate2" style="width:100%"></div>
+      </div>
+      <div id="wkrow" hidden>
+        <label class="fl">曜日</label>
+        <div class="chips">
+          <label class="chip"><input type="checkbox" value="MO">月</label><label class="chip"><input type="checkbox" value="TU">火</label><label class="chip"><input type="checkbox" value="WE">水</label><label class="chip"><input type="checkbox" value="TH">木</label><label class="chip"><input type="checkbox" value="FR">金</label><label class="chip"><input type="checkbox" value="SA">土</label><label class="chip"><input type="checkbox" value="SU">日</label>
+        </div>
+      </div>
+      <div class="meta" id="mnote" hidden style="margin-top:8px"></div>
+      <label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:15px"><input type="checkbox" id="addAll" style="width:20px;height:20px"> 終日</label>
+      <div id="timerow" class="row" style="margin-top:8px">
+        <input type="time" id="addStart"><span class="meta">〜</span><input type="time" id="addEnd">
+      </div>
+      <label class="fl" for="addTitle">タイトル</label>
+      <input type="text" id="addTitle" maxlength="50" style="width:100%">
+      <label class="fl" for="addDetail">詳細(住所やメモなど・任意)</label>
+      <input type="text" id="addDetail" maxlength="300" style="width:100%">
+      <div class="row" style="margin-top:14px">
+        <button class="ghost" id="addcancel">閉じる</button>
+        <button class="big" id="addbtn" style="margin:0;padding:13px;flex:1">カレンダーに追加</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="p-rec" hidden>
+    <section class="card" id="res" style="margin-top:0">
+      <h3>今日のリザルト</h3>
+      <div class="sum" id="score"></div>
+      <div class="meta" id="scoremeta"></div>
+      <ul class="list" id="reslist"></ul>
+      <h2 style="margin-top:14px">割り込み・ログ</h2>
+      <ul class="list" id="loglist"></ul>
+      <div class="row" style="margin-top:12px;flex-wrap:wrap">
+        <button class="big" id="copybtn" style="margin:0;padding:12px;flex:1">リザルトをコピー(AI用)</button>
+        <button class="ghost" id="reset">今日の記録を消す</button>
+        <button class="ghost" id="resetall">全データを削除</button>
+      </div>
+      <div class="meta" id="copymsg" style="margin-top:8px"></div>
+      <textarea id="copyarea" hidden readonly style="width:100%;height:160px;margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);font-size:14px"></textarea>
+    </section>
+  </div>
 </main>
+<nav class="tabs" aria-label="画面切り替え">
+  <button id="n-home" class="on">ホーム</button><button id="n-main">メイン</button><button id="n-cal">カレンダー</button><button id="n-rec">記録</button>
+</nav>
 
 <script>
 // ===== ここを書き換えれば予定が変わる [名前, 開始, 終了, 詳細] =====
@@ -160,21 +224,26 @@ function saveToken(token,expSec){
   scheduleRefresh();
 }
 function gcalConnected(){return !!gToken && Date.now()<gTokenExp;}
+var gcalAt=0;
 function updateGcalStatus(){
-  document.getElementById("gcalstatus").textContent=gcalConnected()?"連携中":"未連携(記録は端末内のみ)";
-  document.getElementById("gcalbtn").textContent=gcalConnected()?"再連携する":"連携する";
-  var an=document.getElementById("addnote");
-  if(an) an.textContent=gcalConnected()?"":"Googleカレンダーと連携すると使える";
+  var on=gcalConnected();
+  $("gcalstatus").textContent=on?"連携中"+(gcalAt?"(最終更新 "+fmt(gcalAt)+")":""):"未連携。連携するとカレンダーと同期できる";
+  $("gcalbtn").textContent=on?"再連携する":"Googleと連携する";
+  $("pill").textContent=on?"カレンダー連携中":"未連携";
+  $("pill").className="pill"+(on?" on":"");
+  $("addnote").textContent=on?"":"先に上の「Googleと連携する」を押してね";
 }
 function initGcal(){
   if(!window.google||!google.accounts||!google.accounts.oauth2){setTimeout(initGcal,300);return;}
   tokenClient=google.accounts.oauth2.initTokenClient({
     client_id:CLIENT_ID, scope:GCAL_SCOPE,
-    callback:function(resp){ if(resp&&resp.access_token){saveToken(resp.access_token,resp.expires_in);updateGcalStatus();fetchGcalToday();} }
+    callback:function(resp){ if(resp&&resp.access_token){saveToken(resp.access_token,resp.expires_in);updateGcalStatus();fetchGcalToday();syncBackup();} }
   });
   updateGcalStatus();
-  if(gcalConnected()){ scheduleRefresh(); fetchGcalToday(); }
-  setInterval(fetchGcalToday,120000);
+  if(gcalConnected()){ scheduleRefresh(); fetchGcalToday(); syncBackup(); }
+  setInterval(function(){if(!document.hidden)fetchGcalToday();},30000);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)fetchGcalToday();});
+  window.addEventListener('focus',fetchGcalToday);
 }
 function gcalCreate(entry,detail){
   if(!gcalConnected()) return;
@@ -192,20 +261,60 @@ function gcalPatchEnd(entry){
     body:JSON.stringify({end:{dateTime:new Date(entry.e).toISOString()}})
   }).catch(function(){});
 }
-var gcalEventsToday=[];
+var gcalEventsToday=[], lastRef=0;
+var EVURL="https://www.googleapis.com/calendar/v3/calendars/primary/events";
+function refreshNow(){ if(tokenClient&&Date.now()-lastRef>300000){lastRef=Date.now();try{tokenClient.requestAccessToken({prompt:""});}catch(e){}} }
+function gapi(url,opt){
+  opt=opt||{};opt.headers={"Authorization":"Bearer "+gToken,"Content-Type":"application/json"};
+  return fetch(url,opt).then(function(r){ if(r.status===401){gTokenExp=0;updateGcalStatus();refreshNow();throw new Error("401");} return r.json(); });
+}
 function fetchGcalToday(){
-  if(!gcalConnected()){gcalEventsToday=[];renderTasks(running());return;}
+  if(!gcalConnected()){ if(gToken) refreshNow(); gcalEventsToday=[]; updateGcalStatus(); renderTasks(running()); return; }
   var d0=new Date();d0.setHours(0,0,0,0);
   var d1=new Date(d0.getTime()+86400000);
-  fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin="+encodeURIComponent(d0.toISOString())+"&timeMax="+encodeURIComponent(d1.toISOString())+"&singleEvents=true&orderBy=startTime",{
-    headers:{"Authorization":"Bearer "+gToken}
-  }).then(function(r){return r.json();}).then(function(d){
+  gapi(EVURL+"?timeMin="+encodeURIComponent(d0.toISOString())+"&timeMax="+encodeURIComponent(d1.toISOString())+"&singleEvents=true&orderBy=startTime&maxResults=100").then(function(d){
     var mine=log.filter(function(x){return x.gid;}).map(function(x){return x.gid;});
-    gcalEventsToday=(d.items||[]).filter(function(ev){return mine.indexOf(ev.id)<0 && ev.start;}).map(function(ev){
-      var st=ev.start.dateTime||ev.start.date, en=ev.end&&(ev.end.dateTime||ev.end.date);
-      return {name:ev.summary||"(無題)", detail:ev.description||"", startTxt: st?fmt(new Date(st).getTime()):"", endTxt: en?fmt(new Date(en).getTime()):""};
+    gcalEventsToday=(d.items||[]).filter(function(ev){
+      var xp=ev.extendedProperties&&ev.extendedProperties.private;
+      return mine.indexOf(ev.id)<0 && ev.start && ev.status!=="cancelled" && !(xp&&xp.koteiData);
+    }).map(function(ev){
+      var allDay=!!ev.start.date&&!ev.start.dateTime;
+      var st=ev.start.dateTime, en=ev.end&&ev.end.dateTime;
+      return {name:ev.summary||"(無題)", detail:ev.description||"", allDay:allDay, startTxt:st?fmt(new Date(st).getTime()):"", endTxt:en?fmt(new Date(en).getTime()):""};
     });
-    renderTasks(running());
+    gcalAt=Date.now(); updateGcalStatus(); renderTasks(running());
+  }).catch(function(){});
+}
+// ===== Googleへのバックアップ(メインタスク) =====
+var TSKEY="kotei_tasks_ts";
+function tasksTs(){try{return +(localStorage.getItem(TSKEY)||0);}catch(e){return 0;}}
+function setTs(){try{localStorage.setItem(TSKEY,String(Date.now()));}catch(e){}}
+function bkMsg(t){var e=$("bkstatus");if(e)e.textContent="バックアップ: "+t;}
+function findBackup(){
+  return gapi(EVURL+"?privateExtendedProperty=koteiData%3D1&maxResults=5").then(function(d){
+    return (d.items||[]).filter(function(e){return e.status!=="cancelled";})[0]||null;
+  });
+}
+function pushBackup(){
+  if(!gcalConnected()){bkMsg("Google未連携のため、この端末にだけ保存されている");return Promise.resolve();}
+  bkMsg("Googleに保存中…");
+  var body={summary:"【工程管理】バックアップデータ(消さないで)",description:JSON.stringify({v:1,ts:tasksTs(),tasks:TASKS}),
+    start:{date:"2000-01-01"},end:{date:"2000-01-02"},transparency:"transparent",visibility:"private",
+    reminders:{useDefault:false},extendedProperties:{"private":{koteiData:"1"}}};
+  return findBackup().then(function(ev){
+    return ev?gapi(EVURL+"/"+ev.id,{method:"PATCH",body:JSON.stringify(body)}):gapi(EVURL,{method:"POST",body:JSON.stringify(body)});
+  }).then(function(d){bkMsg(d&&d.id?"Googleに保存済み("+fmt(Date.now())+")":"保存に失敗した");}).catch(function(){bkMsg("保存に失敗した(通信エラー)");});
+}
+function syncBackup(){
+  if(!gcalConnected()) return;
+  findBackup().then(function(ev){
+    var rd=null;if(ev&&ev.description){try{rd=JSON.parse(ev.description);}catch(e){}}
+    if(rd&&rd.tasks&&rd.ts>tasksTs()){
+      TASKS=rd.tasks;
+      try{localStorage.setItem(TKEY,JSON.stringify(TASKS));localStorage.setItem(TSKEY,String(rd.ts));}catch(e){}
+      render();bkMsg("Googleのバックアップから復元した");
+    }else if((rd&&tasksTs()>rd.ts)||(!rd&&TASKS.length)){pushBackup();}
+    else bkMsg("Googleに保存済み");
   }).catch(function(){});
 }
 // ===============================
@@ -278,10 +387,10 @@ function render(){
     if(!sg.t){
       $("nowlabel").textContent="予定";
       $("nowname").textContent="未設定";
-      $("nowmeta").textContent="「予定を切り替える」→「予定を編集」で追加してね";
+      $("nowmeta").textContent="「メイン」タブでタスクを作ると、ここに出る";
       $("nowdetail").textContent="";
-      btn.textContent="予定を追加してください";
-      btn.onclick=function(){$("tasks").hidden=false;$("editbtn").click();};
+      btn.textContent="メインタスクを作る";
+      btn.onclick=function(){showPane("main");};
     }else{
     $("nowlabel").textContent=sg.now?"いまの予定":"次の予定";
     $("nowname").textContent=sg.t[0];
@@ -295,13 +404,13 @@ function render(){
 }
 function renderTasks(r){
   var ul=$("tasklist");ul.innerHTML="";
-  if(!TASKS.length){ul.innerHTML="<li class='meta'>まだタスクがない。下の「予定を編集」で追加してね</li>";}
+  if(!TASKS.length){ul.innerHTML="<li class='meta'>メインタスクはまだない。「メイン」タブで作れる</li>";}
   TASKS.forEach(function(t){
     var li=document.createElement("li");
     var isCur=r&&r.n===t[0];
     li.style.flexWrap="wrap";
     var info=document.createElement("span");info.style.cursor="pointer";info.className=isCur?"cur":"";
-    info.innerHTML="<span class='meta'>[ツール]</span> "+t[0]+"<br><span class='meta'>"+t[1]+"〜"+t[2]+(t[3]?" ・詳細あり":"")+"</span>";
+    info.innerHTML="<span class='tag'>メイン</span>"+t[0]+"<br><span class='meta'>"+t[1]+"〜"+t[2]+(t[3]?" ・詳細あり":"")+"</span>";
     var dt=document.createElement("div");dt.className="meta";dt.style.flexBasis="100%";dt.style.whiteSpace="pre-wrap";dt.hidden=true;
     dt.textContent=t[3]||"詳細なし(編集画面で追加できる)";
     info.onclick=function(){dt.hidden=!dt.hidden;};
@@ -317,12 +426,12 @@ function renderTasks(r){
   if(gl){
     gl.innerHTML="";
     if(!gcalConnected()){gl.innerHTML="<li class='meta'>連携すると、カレンダー側の予定もここに出る</li>";}
-    else if(!gcalEventsToday.length){gl.innerHTML="<li class='meta'>カレンダー側に今日の他の予定はなし</li>";}
+    else if(!gcalEventsToday.length){gl.innerHTML="<li class='meta'>カレンダーに今日の予定はなし</li>";}
     gcalEventsToday.forEach(function(ev){
       var li=document.createElement("li");li.style.flexWrap="wrap";
       var isCur=r&&r.n===ev.name;
       var info=document.createElement("span");info.style.cursor="pointer";info.className=isCur?"cur":"";
-      info.innerHTML="<span class='meta'>[Googleカレンダー]</span> "+ev.name+"<br><span class='meta'>"+ev.startTxt+"〜"+ev.endTxt+(ev.detail?" ・詳細あり":"")+"</span>";
+      info.innerHTML="<span class='tag g'>カレンダー</span>"+ev.name+"<br><span class='meta'>"+(ev.allDay?"終日":ev.startTxt+"〜"+ev.endTxt)+(ev.detail?" ・詳細あり":"")+"</span>";
       var dt=document.createElement("div");dt.className="meta";dt.style.flexBasis="100%";dt.style.whiteSpace="pre-wrap";dt.hidden=true;
       dt.textContent=ev.detail||"詳細なし";
       info.onclick=function(){dt.hidden=!dt.hidden;};
@@ -397,10 +506,8 @@ function renderEdit(){
     ul.appendChild(li);
   });
 }
-$("editbtn").onclick=function(){draft=JSON.parse(JSON.stringify(TASKS));renderEdit();$("edit").hidden=false;$("edit").scrollIntoView();};
 $("addtask").onclick=function(){draft.push(["","09:00","10:00"]);renderEdit();};
-$("defaults").onclick=function(){if(confirm("初期の予定に戻す?(保存するまで反映されない)")){draft=JSON.parse(JSON.stringify(DEFAULTS));renderEdit();}};
-$("canceledit").onclick=function(){$("edit").hidden=true;};
+$("canceledit").onclick=function(){draft=JSON.parse(JSON.stringify(TASKS));renderEdit();$("savemsg").textContent="";};
 $("savetasks").onclick=function(){
   var out=[],i,t;
   for(i=0;i<draft.length;i++){
@@ -410,10 +517,9 @@ $("savetasks").onclick=function(){
     if(!t[1]||!t[2]||t[1]===t[2]){alert(nm+": 開始と終了の時刻を確認して");return;}
     out.push([nm,t[1],t[2],(t[3]||"").trim()]);
   }
-  if(!out.length){alert("予定が0件。1つは残して");return;}
-  TASKS=out;
+  TASKS=out;setTs();
   try{localStorage.setItem(TKEY,JSON.stringify(TASKS));}catch(e){}
-  $("edit").hidden=true;render();
+  $("savemsg").textContent="保存した";render();pushBackup();
 };
 function buildText(){
   var d0=day0(),now=Date.now(),d=new Date();
@@ -470,37 +576,77 @@ $("copybtn").onclick=function(){
     if(!ok){var ta=$("copyarea");ta.hidden=false;ta.value=t;}
   });
 };
-$("addDate").value=todayStr().split("-").map(function(s,i){return i>0&&s.length<2?"0"+s:s;}).join("-");
+$("addDate").value=todayStr().split("-").map(function(x,i){return i>0&&x.length<2?"0"+x:x;}).join("-");
+function ymd(d){return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2);}
+function addDays(x,n){var d=new Date(x+"T12:00:00");d.setDate(d.getDate()+n);return ymd(d);}
+var TZ=(Intl.DateTimeFormat().resolvedOptions().timeZone)||"Asia/Tokyo", CODES=["SU","MO","TU","WE","TH","FR","SA"];
+function untilStr(d2,all){return all?d2.replace(/-/g,""):new Date(d2+"T23:59:59").toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";}
+function updateMode(){
+  var m=$("addMode").value;
+  $("d2wrap").hidden=(m==="once");
+  $("d2label").textContent=m==="span"?"終了日":m==="daily"?"最終日":"終了日(空欄でずっと)";
+  $("wkrow").hidden=(m!=="weekly");
+  $("mnote").hidden=(m!=="monthly");
+  $("timerow").hidden=$("addAll").checked;
+  if(m==="monthly"){var d=$("addDate").value;$("mnote").textContent=d?"毎月"+(+d.split("-")[2])+"日にくり返す(その日がない月は飛ぶ)":"開始日を入れると、その日にちで毎月くり返す";}
+}
+["addMode","addAll","addDate"].forEach(function(id){$(id).addEventListener("change",updateMode);});
+$("addopen").onclick=function(){$("addform").hidden=false;$("addmsg").textContent="";updateMode();$("addform").scrollIntoView({behavior:"smooth"});};
+$("addcancel").onclick=function(){$("addform").hidden=true;};
 $("addbtn").onclick=function(){
   if(!gcalConnected()){alert("先にGoogleカレンダーと連携して");return;}
-  var date=$("addDate").value, st=$("addStart").value, et=$("addEnd").value;
-  var title=$("addTitle").value.trim(), det=$("addDetail").value.trim();
-  if(!date||!st||!et||!title){alert("日付・時刻・タイトルは必須");return;}
-  var s=new Date(date+"T"+st+":00"), en=new Date(date+"T"+et+":00");
-  if(en<=s) en=new Date(en.getTime()+86400000);
-  fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events",{
-    method:"POST",
-    headers:{"Authorization":"Bearer "+gToken,"Content-Type":"application/json"},
-    body:JSON.stringify({summary:title,description:det,start:{dateTime:s.toISOString()},end:{dateTime:en.toISOString()}})
-  }).then(function(r){return r.json();}).then(function(d){
+  var m=$("addMode").value,d1=$("addDate").value,d2=$("addDate2").value,t1=$("addStart").value,t2=$("addEnd").value,all=$("addAll").checked;
+  var title=$("addTitle").value.trim(),det=$("addDetail").value.trim();
+  if(!title||!d1){alert("タイトルと開始日は必須");return;}
+  if(!all&&(!t1||!t2)){alert("開始と終了の時刻を入れるか、「終日」にチェックして");return;}
+  if((m==="span"||m==="daily")&&!d2){alert("終了日を入れて");return;}
+  if(m!=="once"&&d2&&d2<d1){alert("終了日が開始日より前になってる");return;}
+  var ds=[];
+  if(m==="weekly"){
+    ds=[].slice.call(document.querySelectorAll("#wkrow input:checked")).map(function(x){return x.value;});
+    if(!ds.length) ds=[CODES[new Date(d1+"T12:00:00").getDay()]];
+    var k=0;while(k<7&&ds.indexOf(CODES[new Date(addDays(d1,k)+"T12:00:00").getDay()])<0)k++;
+    d1=addDays(d1,k);
+  }
+  var last=(m==="span")?d2:d1, ev={summary:title,description:det};
+  if(all){ev.start={date:d1};ev.end={date:addDays(last,1)};}
+  else{
+    var ed=last;if(m!=="span"&&t2<=t1) ed=addDays(d1,1);
+    if(m==="span"&&(ed+"T"+t2)<=(d1+"T"+t1)){alert("終了が開始より前になってる");return;}
+    ev.start={dateTime:d1+"T"+t1+":00",timeZone:TZ};ev.end={dateTime:ed+"T"+t2+":00",timeZone:TZ};
+  }
+  if(m==="daily"||m==="weekly"||m==="monthly"){
+    var r="RRULE:FREQ="+{daily:"DAILY",weekly:"WEEKLY",monthly:"MONTHLY"}[m];
+    if(m==="weekly") r+=";BYDAY="+ds.join(",");
+    if(m==="monthly") r+=";BYMONTHDAY="+(+d1.split("-")[2]);
+    if(d2) r+=";UNTIL="+untilStr(d2,all);
+    ev.recurrence=[r];
+  }
+  $("addbtn").disabled=true;
+  gapi(EVURL,{method:"POST",body:JSON.stringify(ev)}).then(function(d){
+    $("addbtn").disabled=false;
     if(d&&d.id){
-      $("addTitle").value="";$("addDetail").value="";$("addStart").value="";$("addEnd").value="";
-      alert("追加した");
-      fetchGcalToday();
-    }else{alert("追加に失敗した。連携状態を確認して");}
-  }).catch(function(){alert("追加に失敗した(通信エラー)");});
+      $("addTitle").value="";$("addDetail").value="";$("addStart").value="";$("addEnd").value="";$("addDate2").value="";
+      $("addform").hidden=true;$("addmsg").textContent="カレンダーに追加した";fetchGcalToday();
+    }else{alert("追加に失敗した: "+((d&&d.error&&d.error.message)||"連携状態を確認して"));}
+  }).catch(function(){$("addbtn").disabled=false;alert("追加に失敗した(通信エラー)");});
 };
 $("adbtn").onclick=function(){var v=$("ad").value.trim();if(!v)return;$("ad").value="";start(v,false);};
 $("ad").addEventListener("keydown",function(e){if(e.key==="Enter")$("adbtn").click();});
-$("tabtasks").onclick=function(){$("tasks").hidden=!$("tasks").hidden;};
-$("tabres").onclick=function(){$("res").hidden=!$("res").hidden;};
+var PANES=["home","main","cal","rec"];
+function showPane(n){
+  PANES.forEach(function(p){$("p-"+p).hidden=(p!==n);$("n-"+p).classList.toggle("on",p===n);});
+  if(n==="main"){draft=JSON.parse(JSON.stringify(TASKS));renderEdit();$("savemsg").textContent="";}
+  window.scrollTo(0,0);
+}
+PANES.forEach(function(p){$("n-"+p).onclick=function(){showPane(p);};});
 $("reset").onclick=function(){
   if(!confirm("今日の記録を消す?")) return;
   var d0=day0();log=log.filter(function(x){return (x.e===null?Date.now():x.e)<d0;});save();render();
 };
 $("resetall").onclick=function(){
-  if(!confirm("全データを削除する?予定・記録・Google連携の情報も全部消える。元に戻せません")) return;
-  try{localStorage.removeItem(KEY);localStorage.removeItem(TKEY);localStorage.removeItem(SKKEY);localStorage.removeItem(GTOKKEY);}catch(e){}
+  if(!confirm("全データを削除する?この端末の予定・記録・Google連携の情報が消える(Google側のバックアップは残る)。元に戻せません")) return;
+  try{localStorage.removeItem(KEY);localStorage.removeItem(TKEY);localStorage.removeItem(SKKEY);localStorage.removeItem(GTOKKEY);localStorage.removeItem(TSKEY);}catch(e){}
   location.reload();
 };
 $("gcalbtn").onclick=function(){
