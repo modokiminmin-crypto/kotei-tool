@@ -39,8 +39,15 @@ input[type=text],input[type=time]{flex:1;min-width:0;padding:12px;border:1px sol
 </style>
 </head>
 <body>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <main>
   <div class="clock"><span id="date"></span><b id="clock"></b></div>
+
+  <section class="card">
+    <h2>Googleカレンダー連携</h2>
+    <div class="meta" id="gcalstatus">未連携</div>
+    <button class="ghost" id="gcalbtn" style="margin-top:8px">連携する</button>
+  </section>
 
   <section class="card" id="nowcard">
     <h2 id="nowlabel">いま</h2>
@@ -91,6 +98,7 @@ input[type=text],input[type=time]{flex:1;min-width:0;padding:12px;border:1px sol
     <div class="row" style="margin-top:12px;flex-wrap:wrap">
       <button class="big" id="copybtn" style="margin:0;padding:12px;flex:1">リザルトをコピー(AI用)</button>
       <button class="ghost" id="reset">今日の記録を消す</button>
+      <button class="ghost" id="resetall">全データを削除</button>
     </div>
     <div class="meta" id="copymsg" style="margin-top:8px"></div>
     <textarea id="copyarea" hidden readonly style="width:100%;height:160px;margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:14px"></textarea>
@@ -119,6 +127,45 @@ try{ var sk0=JSON.parse(localStorage.getItem(SKKEY)); if(sk0&&sk0.d===todayStr()
 SKDAY=todayStr();
 function saveSkip(){ try{ localStorage.setItem(SKKEY,JSON.stringify({d:SKDAY,n:SKIP})); }catch(e){} }
 function isSkipped(name){return SKIP.indexOf(name)>=0;}
+// ===== Googleカレンダー連携 =====
+var CLIENT_ID="67610132940-8ges0up9jivd99ihlidbba5bqm7j2u77.apps.googleusercontent.com";
+var GCAL_SCOPE="https://www.googleapis.com/auth/calendar.events";
+var GTOKKEY="kotei_gtoken_v1", gToken=null, gTokenExp=0, tokenClient=null;
+try{ var gt=JSON.parse(localStorage.getItem(GTOKKEY)); if(gt&&gt.exp>Date.now()){gToken=gt.token;gTokenExp=gt.exp;} }catch(e){}
+function saveToken(token,expSec){
+  gToken=token; gTokenExp=Date.now()+((expSec||3500)-60)*1000;
+  try{localStorage.setItem(GTOKKEY,JSON.stringify({token:gToken,exp:gTokenExp}));}catch(e){}
+}
+function gcalConnected(){return !!gToken && Date.now()<gTokenExp;}
+function updateGcalStatus(){
+  document.getElementById("gcalstatus").textContent=gcalConnected()?"連携中":"未連携(記録は端末内のみ)";
+  document.getElementById("gcalbtn").textContent=gcalConnected()?"再連携する":"連携する";
+}
+function initGcal(){
+  if(!window.google||!google.accounts||!google.accounts.oauth2){setTimeout(initGcal,300);return;}
+  tokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:CLIENT_ID, scope:GCAL_SCOPE,
+    callback:function(resp){ if(resp&&resp.access_token){saveToken(resp.access_token,resp.expires_in);updateGcalStatus();} }
+  });
+  updateGcalStatus();
+}
+function gcalCreate(entry){
+  if(!gcalConnected()) return;
+  fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events",{
+    method:"POST",
+    headers:{"Authorization":"Bearer "+gToken,"Content-Type":"application/json"},
+    body:JSON.stringify({summary:entry.n,start:{dateTime:new Date(entry.s).toISOString()},end:{dateTime:new Date(entry.s+60000).toISOString()}})
+  }).then(function(r){return r.json();}).then(function(d){ if(d&&d.id){entry.gid=d.id; save();} }).catch(function(){});
+}
+function gcalPatchEnd(entry){
+  if(!gcalConnected()||!entry.gid) return;
+  fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events/"+entry.gid,{
+    method:"PATCH",
+    headers:{"Authorization":"Bearer "+gToken,"Content-Type":"application/json"},
+    body:JSON.stringify({end:{dateTime:new Date(entry.e).toISOString()}})
+  }).catch(function(){});
+}
+// ===============================
 function $(id){return document.getElementById(id);}
 function tm(s){var p=s.split(":");return +p[0]*60+ +p[1];}
 function plen(t){var d=tm(t[2])-tm(t[1]);return d<=0?d+1440:d;}
@@ -136,15 +183,32 @@ function suggested(){
   if(!best){best=TASKS[0];bd=0;}
   return {t:best,now:false,in:bd};
 }
-function stopRun(){var r=running();if(r) r.e=Date.now();}
+function stopRun(){var r=running();if(r){ r.e=Date.now(); gcalPatchEnd(r); }}
 function start(name,planned){
   var r=running();
   if(r&&r.n===name) return;
   stopRun();
-  log.push({n:name,s:Date.now(),e:null,p:planned});
+  var entry={n:name,s:Date.now(),e:null,p:planned};
+  log.push(entry);
   save(); render();
+  gcalCreate(entry);
 }
 function stopAll(){stopRun();save();render();}
+function nextInOrder(name){
+  var idx=-1;
+  for(var i=0;i<TASKS.length;i++) if(TASKS[i][0]===name){idx=i;break;}
+  if(idx<0) return null;
+  for(var k=1;k<=TASKS.length;k++){
+    var cand=TASKS[(idx+k)%TASKS.length];
+    if(!isSkipped(cand[0])) return cand;
+  }
+  return null;
+}
+function endAndAdvance(){
+  var r=running();if(!r) return;
+  var nx=nextInOrder(r.n);
+  if(nx) start(nx[0],true); else stopAll();
+}
 
 function render(){
   if(SKDAY!==todayStr()){SKDAY=todayStr();SKIP=[];saveSkip();}
@@ -153,7 +217,7 @@ function render(){
   $("clock").textContent=fmt(Date.now());
   var btn=$("mainbtn");
   $("stopbtn").hidden=!r;
-  if(r) $("stopbtn").textContent="「"+r.n+"」を終了する";
+  $("stopbtn").textContent="中断する";
   $("stopbtn").onclick=stopAll;
   if(r){
     $("nowlabel").textContent="実行中";
@@ -163,8 +227,8 @@ function render(){
     if(pt) meta+=" / 予定 "+pt[1]+"〜"+pt[2];
     $("nowmeta").textContent=meta;
     $("nowdetail").textContent=(pt&&pt[3])?pt[3]:"";
-    if(sg.now&&sg.t[0]!==r.n){btn.textContent="次へ: "+sg.t[0]+" を開始";btn.onclick=function(){start(sg.t[0],true);};}
-    else{btn.textContent="終了する";btn.onclick=stopAll;}
+    btn.textContent="「"+r.n+"」を終了して次へ";
+    btn.onclick=endAndAdvance;
   }else{
     $("nowlabel").textContent=sg.now?"いまの予定":"次の予定";
     $("nowname").textContent=sg.t[0];
@@ -341,6 +405,16 @@ $("reset").onclick=function(){
   if(!confirm("今日の記録を消す?")) return;
   var d0=day0();log=log.filter(function(x){return (x.e===null?Date.now():x.e)<d0;});save();render();
 };
+$("resetall").onclick=function(){
+  if(!confirm("全データを削除する?予定・記録・Google連携の情報も全部消える。元に戻せません")) return;
+  try{localStorage.removeItem(KEY);localStorage.removeItem(TKEY);localStorage.removeItem(SKKEY);localStorage.removeItem(GTOKKEY);}catch(e){}
+  location.reload();
+};
+$("gcalbtn").onclick=function(){
+  if(!tokenClient){alert("読み込み中。少し待ってもう一度押して");return;}
+  tokenClient.requestAccessToken({prompt: gcalConnected()?"":"consent"});
+};
+window.addEventListener("load",initGcal);
 render();
 setInterval(render,20000);
 </script>
