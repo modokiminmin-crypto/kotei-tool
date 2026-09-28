@@ -13,9 +13,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f2f4fb;--card:#fff;--ink:#141a3d;--sub:#65708f;--line:#e2e6f3;--acc:#3f5df0;--accink:#fff;--ok:#12915a;--warn:#c8540a;--g1:#38aef7;--g2:#4f46e5;--tagt:#e6ecff;--tagtc:#2f48d0;--tagg:#dff5ec;--taggc:#0d7a4f;
+:root{--bg:#f2f4fb;--card:#fff;--ink:#141a3d;--sub:#65708f;--line:#e2e6f3;--acc:#3f5df0;--accink:#fff;--ok:#12915a;--warn:#c8540a;--g1:#38aef7;--g2:#4f46e5;--tagt:#e6ecff;--tagtc:#2f48d0;--tagg:#dff5ec;--taggc:#0d7a4f;--tagh:#ffe6e0;--taghc:#b3341a;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
-@media (prefers-color-scheme:dark){:root{--bg:#0c1020;--card:#161b34;--ink:#eaeeff;--sub:#98a2c8;--line:#262d50;--acc:#7c94ff;--accink:#0c1020;--ok:#4ed19a;--warn:#f59a63;--tagt:#232c66;--tagtc:#b5c3ff;--tagg:#12382c;--taggc:#7fe3b8}}
+@media (prefers-color-scheme:dark){:root{--bg:#0c1020;--card:#161b34;--ink:#eaeeff;--sub:#98a2c8;--line:#262d50;--acc:#7c94ff;--accink:#0c1020;--ok:#4ed19a;--warn:#f59a63;--tagt:#232c66;--tagtc:#b5c3ff;--tagg:#12382c;--taggc:#7fe3b8;--tagh:#4a2118;--taghc:#ffb59f}}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -26,15 +26,17 @@ main{max-width:520px;margin:0 auto;padding:14px 16px 118px}
 .top b{display:block;font-size:40px;font-weight:900;letter-spacing:.01em;line-height:1.1}
 .pill{font-size:12px;font-weight:700;padding:5px 11px;border-radius:99px;background:var(--line);color:var(--sub)}
 .pill.on{background:var(--tagg);color:var(--taggc)}
-.hero{background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;border-radius:28px;padding:22px;box-shadow:0 16px 32px -14px rgba(79,70,229,.6)}
+.hero{position:relative;overflow:hidden;background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;border-radius:28px;padding:22px;box-shadow:0 16px 32px -14px rgba(79,70,229,.6)}
+.hero::after{content:"";position:absolute;right:-70px;top:-70px;width:220px;height:220px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,255,255,.26),transparent);pointer-events:none}
 .hero h2{color:rgba(255,255,255,.8);margin:0 0 4px}
-.hero .meta{color:rgba(255,255,255,.85)}
+.hero .meta{color:rgba(255,255,255,.88)}
 .hero .big{background:#fff;color:#3a3fd8}
 .hero .ghost{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.35);color:#fff}
+.hero .bar{background:rgba(255,255,255,.25)}.hero .bar i{background:#fff}
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:14px}
 h2{font-size:13px;margin:0 0 8px;color:var(--sub);font-weight:700}
 h3{font-size:17px;margin:0 0 4px;font-weight:900}
-.now{font-size:30px;font-weight:900;margin:2px 0;line-height:1.25}
+.now{font-size:30px;font-weight:900;margin:2px 0;line-height:1.25;overflow-wrap:anywhere}
 .meta{color:var(--sub);font-size:14px}
 .big{width:100%;margin-top:14px;padding:17px;border:0;border-radius:14px;background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;font:inherit;font-size:17px;font-weight:900;cursor:pointer}
 .big:active{transform:scale(.99)}
@@ -42,18 +44,30 @@ h3{font-size:17px;margin:0 0 4px;font-weight:900}
 button{font-family:inherit}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 .ghost{background:none;border:1px solid var(--line);color:var(--ink);border-radius:12px;padding:9px 14px;font-size:14px;font-weight:500;cursor:pointer}
+.sm{padding:7px 12px;font-size:13px}
+.danger{color:var(--warn);border-color:var(--warn)}
 .row{display:flex;gap:8px;align-items:center}
 .list{list-style:none;margin:0;padding:0}
-.list li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 0;border-top:1px solid var(--line)}
+.list li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--line)}
 .list li:first-child{border-top:0}
-.list .cur{font-weight:900;color:var(--acc)}
+.list li.it{align-items:flex-start}
+.tm{width:52px;flex:none;font-weight:900;font-size:16px;line-height:1.25;padding-top:1px}
+.tm small{display:block;font-weight:500;font-size:12px;color:var(--sub)}
+.bd{flex:1;min-width:0;cursor:pointer}
+.nm{font-weight:700;overflow-wrap:anywhere}
+.bd.cur .nm{color:var(--acc)}
+.act{display:flex;flex-direction:column;gap:6px;flex:none}
+.dt{white-space:pre-wrap;font-size:13px;color:var(--sub);margin-top:4px;overflow-wrap:anywhere}
 input[type=text],input[type=time],input[type=date],select{flex:1;min-width:0;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);font:inherit;font-size:16px}
 select{width:100%}
 label.fl{display:block;font-size:13px;color:var(--sub);font-weight:700;margin:12px 0 4px}
 .tag{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:99px;margin-right:4px;vertical-align:1px;background:var(--tagt);color:var(--tagtc)}
 .tag.g{background:var(--tagg);color:var(--taggc)}
-.sec{display:flex;align-items:center;gap:6px;margin:16px 0 4px}
-.sec:first-of-type{margin-top:0}
+.tag.h{background:var(--tagh);color:var(--taghc)}
+.sec{display:flex;align-items:center;gap:6px;margin:18px 0 4px;flex-wrap:wrap}
+.sec.first{margin-top:6px}
+.dh{display:flex;align-items:center;gap:6px;margin:18px 0 2px;font-weight:900;flex-wrap:wrap}
+.dh.today{color:var(--acc)}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
 .chip{position:relative;width:42px;height:42px;display:grid;place-items:center;border:1px solid var(--line);border-radius:12px;font-weight:700;cursor:pointer;background:var(--bg)}
 .chip input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
@@ -63,9 +77,9 @@ label.fl{display:block;font-size:13px;color:var(--sub);font-weight:700;margin:12
 .bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:6px}
 .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--g1),var(--g2))}
 .sum{font-size:32px;font-weight:900}
-.note{background:var(--bg);border-radius:12px;padding:10px 12px;font-size:13px;color:var(--sub);margin-top:8px}
+.note{background:var(--bg);border-radius:12px;padding:10px 12px;font-size:13px;color:var(--sub);margin-top:10px}
 nav.tabs{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));max-width:496px;margin:0 auto;display:flex;gap:4px;padding:6px;background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:0 10px 30px -10px rgba(20,26,61,.35)}
-nav.tabs button{flex:1;border:0;background:none;color:var(--sub);padding:11px 0;border-radius:16px;font-size:14px;font-weight:700;cursor:pointer}
+nav.tabs button{flex:1;border:0;background:none;color:var(--sub);padding:11px 0;border-radius:16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
 nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -80,13 +94,14 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
       <h2 id="nowlabel">いま</h2>
       <div class="now" id="nowname"></div>
       <div class="meta" id="nowmeta"></div>
-      <div class="meta" id="nowdetail" style="white-space:pre-wrap;margin-top:6px"></div>
+      <div class="bar" id="herobarwrap" hidden><i id="herobar" style="width:0"></i></div>
+      <div class="meta" id="nowdetail" style="white-space:pre-wrap;margin-top:8px"></div>
       <button class="big" id="mainbtn"></button>
       <button class="ghost" id="stopbtn" style="width:100%;margin-top:10px;padding:14px" hidden>中断する</button>
     </section>
 
     <section class="card">
-      <h2>割り込み(予定にないこと)</h2>
+      <h2>予定にないこと(割り込み)を記録</h2>
       <div class="row">
         <input type="text" id="ad" placeholder="例: 電話対応、買い物" maxlength="30">
         <button class="ghost" id="adbtn">開始</button>
@@ -95,75 +110,70 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
 
     <section class="card" id="tasks">
       <h3>きょうの予定</h3>
-      <div class="sec"><span class="tag">メイン</span><span class="meta">毎日くり返す自分用のタスク</span></div>
+      <div class="meta ok" id="holnote" hidden></div>
+      <div class="sec first"><span class="tag">ツールタスク</span><span class="meta">このアプリ内の自分用タスク</span></div>
       <ul class="list" id="tasklist"></ul>
-      <div class="sec"><span class="tag g">カレンダー</span><span class="meta">Googleカレンダーの今日の予定(30秒ごとに更新)</span></div>
+      <div class="sec"><span class="tag g">カレンダー予定</span><span class="meta">Googleカレンダーの今日の分</span></div>
       <ul class="list" id="gcaltasklist"></ul>
     </section>
   </div>
 
-  <div id="p-main" hidden>
+  <div id="p-tool" hidden>
     <section class="card" style="margin-top:0">
-      <h3><span class="tag">メイン</span>メインタスク</h3>
-      <div class="meta">毎日同じ時間にくり返すタスク。この端末に保存され、連携中はGoogleにも自動でバックアップされる。</div>
-      <ul class="list" id="editlist" style="margin-top:8px"></ul>
-      <div class="row" style="margin-top:12px;flex-wrap:wrap">
-        <button class="ghost" id="addtask">+ タスクを追加</button>
-        <button class="ghost" id="canceledit">変更を戻す</button>
-        <button class="big" id="savetasks" style="margin:0;padding:12px;flex:1">保存</button>
-      </div>
-      <div class="meta" id="savemsg" style="margin-top:8px"></div>
+      <h3><span class="tag">ツールタスク</span></h3>
+      <div class="meta">このアプリの中だけで動く、自分用のタスク。毎日・毎週・毎月のくり返しも設定できる。この端末に保存され、Google連携中は自動でバックアップされる。</div>
+      <button class="big" id="topen" style="margin-top:12px">+ ツールタスクを追加</button>
+      <div class="meta ok" id="tmsg"></div>
       <div class="note" id="bkstatus">バックアップ: Google未連携</div>
+    </section>
+    <section class="card" id="tformcard" hidden>
+      <h3 id="tformtitle">ツールタスクを追加</h3>
+      <div id="tformbox"></div>
+      <div class="row" style="margin-top:14px">
+        <button class="ghost" id="tcancel">閉じる</button>
+        <button class="big" id="tsave" style="margin:0;padding:13px;flex:1">追加する</button>
+      </div>
+      <div class="row" style="margin-top:10px" id="tdelwrap" hidden><button class="ghost danger" id="tdel">このツールタスクを削除</button></div>
+    </section>
+    <section class="card">
+      <h3>登録済みのツールタスク</h3>
+      <ul class="list" id="toollist"></ul>
     </section>
   </div>
 
   <div id="p-cal" hidden>
     <section class="card" style="margin-top:0">
-      <h3><span class="tag g">カレンダー</span>Googleカレンダー</h3>
-      <div class="meta" id="gcalstatus">未連携</div>
-      <button class="ghost" id="gcalbtn" style="margin-top:8px">Googleと連携する</button>
+      <h3><span class="tag g">カレンダー予定</span></h3>
+      <div class="meta">Googleカレンダーに保存される予定。追加・変更・削除はGoogleカレンダーにも反映される。</div>
+      <div class="meta" id="gcalstatus" style="margin-top:8px">未連携</div>
+      <div class="row" style="margin-top:8px;flex-wrap:wrap">
+        <button class="ghost" id="gcalbtn">Googleと連携する</button>
+        <button class="ghost" id="addopen">+ 予定を追加</button>
+      </div>
+      <div class="meta warn" id="addnote"></div>
+      <div class="meta ok" id="addmsg"></div>
+    </section>
+
+    <section class="card" id="cformcard" hidden>
+      <h3 id="cformtitle">カレンダーに予定を追加</h3>
+      <div id="cformbox"></div>
+      <div id="cscopewrap" hidden><label class="fl" for="cscope">変更する範囲</label>
+        <select id="cscope"><option value="one">この回だけ</option><option value="all">くり返し全部(名前と詳細のみ)</option></select></div>
+      <div class="row" style="margin-top:14px">
+        <button class="ghost" id="ccancel">閉じる</button>
+        <button class="big" id="csave" style="margin:0;padding:13px;flex:1">カレンダーに追加</button>
+      </div>
+      <div class="row" id="cdelwrap" style="margin-top:10px;flex-wrap:wrap" hidden>
+        <button class="ghost danger" id="cdel1">この予定を削除</button>
+        <button class="ghost danger" id="cdelall" hidden>くり返し全部を削除</button>
+      </div>
     </section>
 
     <section class="card">
-      <h3><span class="tag g">カレンダー</span>予定を追加</h3>
-      <div class="meta">ここで追加した予定はGoogleカレンダーに保存される。毎日のメインタスクとは別もの。</div>
-      <div class="meta warn" id="addnote"></div>
-      <div class="meta ok" id="addmsg"></div>
-      <button class="big" id="addopen" style="margin-top:10px">+ 予定を追加する</button>
-    </section>
-
-    <section class="card" id="addform" hidden>
-      <label class="fl" for="addMode" style="margin-top:0">くり返し方</label>
-      <select id="addMode">
-        <option value="once">1日だけ</option>
-        <option value="span">何日から何日まで(続けて1つの予定)</option>
-        <option value="daily">期間中、毎日同じ時間</option>
-        <option value="weekly">毎週(曜日を選ぶ)</option>
-        <option value="monthly">毎月(同じ日にち)</option>
-      </select>
-      <div class="row" style="margin-top:12px;align-items:flex-end">
-        <div style="flex:1"><label class="fl" for="addDate" style="margin-top:0">開始日</label><input type="date" id="addDate" style="width:100%"></div>
-        <div style="flex:1" id="d2wrap"><label class="fl" for="addDate2" id="d2label" style="margin-top:0">終了日</label><input type="date" id="addDate2" style="width:100%"></div>
-      </div>
-      <div id="wkrow" hidden>
-        <label class="fl">曜日</label>
-        <div class="chips">
-          <label class="chip"><input type="checkbox" value="MO">月</label><label class="chip"><input type="checkbox" value="TU">火</label><label class="chip"><input type="checkbox" value="WE">水</label><label class="chip"><input type="checkbox" value="TH">木</label><label class="chip"><input type="checkbox" value="FR">金</label><label class="chip"><input type="checkbox" value="SA">土</label><label class="chip"><input type="checkbox" value="SU">日</label>
-        </div>
-      </div>
-      <div class="meta" id="mnote" hidden style="margin-top:8px"></div>
-      <label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:15px"><input type="checkbox" id="addAll" style="width:20px;height:20px"> 終日</label>
-      <div id="timerow" class="row" style="margin-top:8px">
-        <input type="time" id="addStart"><span class="meta">〜</span><input type="time" id="addEnd">
-      </div>
-      <label class="fl" for="addTitle">タイトル</label>
-      <input type="text" id="addTitle" maxlength="50" style="width:100%">
-      <label class="fl" for="addDetail">詳細(住所やメモなど・任意)</label>
-      <input type="text" id="addDetail" maxlength="300" style="width:100%">
-      <div class="row" style="margin-top:14px">
-        <button class="ghost" id="addcancel">閉じる</button>
-        <button class="big" id="addbtn" style="margin:0;padding:13px;flex:1">カレンダーに追加</button>
-      </div>
+      <div class="row" style="justify-content:space-between"><h3 style="margin:0">予定一覧</h3>
+        <select id="listRange" style="width:auto;flex:none;padding:8px 10px;font-size:14px"><option value="7">今後7日</option><option value="14" selected>今後14日</option><option value="30">今後30日</option><option value="90">今後90日</option></select></div>
+      <div class="meta">タップで内容を確認。「編集」で変更・削除できる。</div>
+      <div id="callist"></div>
     </section>
   </div>
 
@@ -173,12 +183,12 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
       <div class="sum" id="score"></div>
       <div class="meta" id="scoremeta"></div>
       <ul class="list" id="reslist"></ul>
-      <h2 style="margin-top:14px">割り込み・ログ</h2>
+      <h2 style="margin-top:14px">実行ログ(割り込み含む)</h2>
       <ul class="list" id="loglist"></ul>
       <div class="row" style="margin-top:12px;flex-wrap:wrap">
         <button class="big" id="copybtn" style="margin:0;padding:12px;flex:1">リザルトをコピー(AI用)</button>
         <button class="ghost" id="reset">今日の記録を消す</button>
-        <button class="ghost" id="resetall">全データを削除</button>
+        <button class="ghost" id="resetall">この端末のデータを削除</button>
       </div>
       <div class="meta" id="copymsg" style="margin-top:8px"></div>
       <textarea id="copyarea" hidden readonly style="width:100%;height:160px;margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);font-size:14px"></textarea>
@@ -186,37 +196,142 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
   </div>
 </main>
 <nav class="tabs" aria-label="画面切り替え">
-  <button id="n-home" class="on">ホーム</button><button id="n-main">メイン</button><button id="n-cal">カレンダー</button><button id="n-rec">記録</button>
+  <button id="n-home" class="on">ホーム</button><button id="n-tool">ツールタスク</button><button id="n-cal">カレンダー</button><button id="n-rec">記録</button>
 </nav>
 
 <script>
-// ===== ここを書き換えれば予定が変わる [名前, 開始, 終了, 詳細] =====
-var TASKS = [];
-// ===========================================================
-var KEY="kotei_v1", TKEY="kotei_tasks_v1", log=[], DEFAULTS=JSON.parse(JSON.stringify(TASKS));
-try{ var tr=localStorage.getItem(TKEY); if(tr){ var tp=JSON.parse(tr); if(tp&&tp.length) TASKS=tp; } }catch(e){}
-try{ var raw=localStorage.getItem(KEY); if(raw) log=JSON.parse(raw)||[]; }catch(e){}
-function save(){ try{ localStorage.setItem(KEY,JSON.stringify(log)); }catch(e){} }
-var SKKEY="kotei_skip_v1", SKIP=[], SKDAY="";
-function todayStr(){var d=new Date();return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();}
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function p2(n){return ("0"+n).slice(-2);}
+function ymd(d){return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate());}
+function todayStr(){return ymd(new Date());}
+function addDays(x,n){var d=new Date(x+"T12:00:00");d.setDate(d.getDate()+n);return ymd(d);}
+function wd(ds){return new Date(ds+"T12:00:00").getDay();}
+function md(ds){return (+ds.slice(5,7))+"/"+(+ds.slice(8));}
+function mdw(ds){return md(ds)+"("+"日月火水木金土"[wd(ds)]+")";}
+function uid(){return "t"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function tm(s){var p=s.split(":");return +p[0]*60+ +p[1];}
+function plen(t){var d=tm(t[2])-tm(t[1]);return d<=0?d+1440:d;}
+function nowMin(){var d=new Date();return d.getHours()*60+d.getMinutes();}
+function fmt(ms){var d=new Date(ms);return p2(d.getHours())+":"+p2(d.getMinutes());}
+function dur(ms){var m=Math.round(ms/60000);return m>=60?Math.floor(m/60)+"時間"+(m%60)+"分":m+"分";}
+function day0(){var d=new Date();d.setHours(0,0,0,0);return d.getTime();}
+function inWin(t,n){var s=tm(t[1]),e=tm(t[2]);return s<e?(n>=s&&n<e):(n>=s||n<e);}
+
+// ===== 保存キー(データ構造を変えても、古いキーは消さずに引き継ぐ) =====
+var KEY="kotei_v1", TKEY2="kotei_tasks_v2", TKEY1="kotei_tasks_v1", TSKEY="kotei_tasks_ts", SKKEY="kotei_skip_v1", GTOKKEY="kotei_gtoken_v1";
+var log=[], TASKS=[], SKIP=[], SKDAY=todayStr();
+try{ log=JSON.parse(localStorage.getItem(KEY))||[]; }catch(e){}
+try{
+  var t2=localStorage.getItem(TKEY2);
+  if(t2){ TASKS=normalize(JSON.parse(t2)); }
+  else{ var t1=localStorage.getItem(TKEY1); if(t1){ TASKS=normalize(JSON.parse(t1)); saveTasksLocal(); } }
+}catch(e){}
 try{ var sk0=JSON.parse(localStorage.getItem(SKKEY)); if(sk0&&sk0.d===todayStr()){SKIP=sk0.n||[];} }catch(e){}
-SKDAY=todayStr();
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(log)); }catch(e){} }
 function saveSkip(){ try{ localStorage.setItem(SKKEY,JSON.stringify({d:SKDAY,n:SKIP})); }catch(e){} }
+function saveTasksLocal(){ try{ localStorage.setItem(TKEY2,JSON.stringify(TASKS)); }catch(e){} }
 function isSkipped(name){return SKIP.indexOf(name)>=0;}
+// 旧形式 [名前,開始,終了,詳細] も新形式もここで統一
+function normalize(arr){
+  if(!Array.isArray(arr)) return [];
+  return arr.map(function(x){
+    if(Array.isArray(x)) return {id:uid(),n:x[0]||"",s:x[1]||"",e:x[2]||"",d:x[3]||"",m:"daily",d1:"",d2:"",wk:[]};
+    if(!x||typeof x!=="object") return null;
+    return {id:x.id||uid(),n:x.n||"",s:x.s||"",e:x.e||"",d:x.d||"",m:x.m||"daily",d1:x.d1||"",d2:x.d2||"",wk:Array.isArray(x.wk)?x.wk:[]};
+  }).filter(function(t){return t&&t.n&&t.s&&t.e;});
+}
+
+// ===== ツールタスクの「きょうあるか」判定 =====
+function occurs(t,ds){
+  if(t.m==="once") return ds===t.d1;
+  if(t.m==="span") return !!t.d1&&!!t.d2&&ds>=t.d1&&ds<=t.d2;
+  if((t.d1&&ds<t.d1)||(t.d2&&ds>t.d2)) return false;
+  if(t.m==="weekly"){var w=t.wk&&t.wk.length?t.wk:(t.d1?[wd(t.d1)]:[]);return w.indexOf(wd(ds))>=0;}
+  if(t.m==="monthly") return !!t.d1&&+ds.slice(8)===+t.d1.slice(8);
+  return true;
+}
+function win(t,ds){
+  if(t.m==="span"&&t.d1!==t.d2){ if(ds===t.d1) return [t.s,"23:59"]; if(ds===t.d2) return ["00:00",t.e]; return ["00:00","23:59"]; }
+  return [t.s,t.e];
+}
+function TT(){
+  var ds=todayStr();
+  return TASKS.filter(function(t){return occurs(t,ds);}).map(function(t){var w=win(t,ds);return [t.n,w[0],w[1],t.d||"",t.id];})
+    .sort(function(a,b){return tm(a[1])-tm(b[1]);});
+}
+function describe(t){
+  var tt=t.s+"〜"+t.e;
+  if(t.m==="once") return md(t.d1)+" だけ "+tt;
+  if(t.m==="span") return md(t.d1)+" "+t.s+" 〜 "+md(t.d2)+" "+t.e;
+  var per=(t.d1||t.d2)?"("+(t.d1?md(t.d1):"")+"〜"+(t.d2?md(t.d2):"")+")":"";
+  if(t.m==="weekly"){var w=(t.wk&&t.wk.length?t.wk:[wd(t.d1)]).slice().sort(function(a,b){return (a+6)%7-(b+6)%7;});return "毎週 "+w.map(function(x){return "日月火水木金土"[x];}).join("・")+" "+tt+per;}
+  if(t.m==="monthly") return "毎月"+(+t.d1.slice(8))+"日 "+tt+per;
+  return "毎日 "+tt+per;
+}
+
+// ===== 予定フォーム(ツールタスク・カレンダー共通) =====
+var TZ=(Intl.DateTimeFormat().resolvedOptions().timeZone)||"Asia/Tokyo", CODES=["SU","MO","TU","WE","TH","FR","SA"], editingEv=null, editingTask=null;
+function formHTML(p,allday){
+  var chips=[[1,"月"],[2,"火"],[3,"水"],[4,"木"],[5,"金"],[6,"土"],[0,"日"]].map(function(c){return '<label class="chip"><input type="checkbox" value="'+c[0]+'">'+c[1]+'</label>';}).join("");
+  return '<div id="'+p+'modewrap"><label class="fl" for="'+p+'Mode" style="margin-top:0">くり返し方</label>'+
+    '<select id="'+p+'Mode"><option value="once">1日だけ</option><option value="span">何日から何日まで(続けて1つの予定・旅行など)</option><option value="daily">期間中、毎日同じ時間</option><option value="weekly">毎週(曜日を選ぶ)</option><option value="monthly">毎月(開始日と同じ日にち)</option></select></div>'+
+    '<div class="row" style="margin-top:12px;align-items:flex-end"><div style="flex:1"><label class="fl" for="'+p+'D1" style="margin-top:0">開始日</label><input type="date" id="'+p+'D1" style="width:100%"></div>'+
+    '<div style="flex:1" id="'+p+'d2wrap"><label class="fl" for="'+p+'D2" id="'+p+'d2l" style="margin-top:0">終了日</label><input type="date" id="'+p+'D2" style="width:100%"></div></div>'+
+    '<div id="'+p+'wk" hidden><label class="fl">曜日(複数OK)</label><div class="chips">'+chips+'</div></div>'+
+    '<div class="meta" id="'+p+'mnote" hidden style="margin-top:8px"></div>'+
+    (allday?'<label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:15px"><input type="checkbox" id="'+p+'All" style="width:20px;height:20px"> 終日</label>':'')+
+    '<div id="'+p+'time" class="row" style="margin-top:10px"><input type="time" id="'+p+'T1" aria-label="開始時刻"><span class="meta">〜</span><input type="time" id="'+p+'T2" aria-label="終了時刻"></div>'+
+    '<label class="fl" for="'+p+'Title">'+(allday?"タイトル":"タスク名")+'</label><input type="text" id="'+p+'Title" maxlength="50" style="width:100%">'+
+    '<label class="fl" for="'+p+'Det">詳細(住所やメモなど・任意)</label><input type="text" id="'+p+'Det" maxlength="300" style="width:100%">';
+}
+function updForm(p){
+  var ed=(p==="c"&&editingEv), m=ed?"span":$(p+"Mode").value;
+  $(p+"modewrap").hidden=!!ed;
+  $(p+"d2wrap").hidden=(m==="once");
+  $(p+"d2l").textContent=ed?"終了日(1日だけなら空欄)":m==="span"?"終了日":"終了日(空欄でずっと)";
+  $(p+"wk").hidden=(m!=="weekly");
+  $(p+"mnote").hidden=(m!=="monthly");
+  $(p+"time").hidden=!!($(p+"All")&&$(p+"All").checked);
+  if(m==="monthly"){var d=$(p+"D1").value;$(p+"mnote").textContent=d?"毎月"+(+d.split("-")[2])+"日にくり返す(その日がない月は飛ぶ)":"開始日を入れると、その日にちで毎月くり返す";}
+}
+function rd(p){return {m:$(p+"Mode").value,d1:$(p+"D1").value,d2:$(p+"D2").value,t1:$(p+"T1").value,t2:$(p+"T2").value,all:!!($(p+"All")&&$(p+"All").checked),
+  title:$(p+"Title").value.trim(),det:$(p+"Det").value.trim(),
+  wk:[].slice.call(document.querySelectorAll("#"+p+"wk input:checked")).map(function(x){return +x.value;})};}
+function fillForm(p,o){
+  $(p+"Mode").value=o.m;$(p+"D1").value=o.d1||"";$(p+"D2").value=o.d2||"";$(p+"T1").value=o.t1||"";$(p+"T2").value=o.t2||"";
+  if($(p+"All"))$(p+"All").checked=!!o.all;
+  $(p+"Title").value=o.title||"";$(p+"Det").value=o.det||"";
+  [].forEach.call(document.querySelectorAll("#"+p+"wk input"),function(x){x.checked=(o.wk||[]).indexOf(+x.value)>=0;});
+  updForm(p);
+}
+function validate(o,needT,hint){
+  if(!o.title) return "名前を入れて";
+  if(!o.d1) return "開始日を入れて";
+  if(needT&&(!o.t1||!o.t2)) return hint||"開始と終了の時刻を入れて";
+  if(o.m==="span"&&!o.d2) return "終了日を入れて";
+  if(o.m!=="once"&&o.d2&&o.d2<o.d1) return "終了日が開始日より前になってる";
+  return "";
+}
+$("cformbox").innerHTML=formHTML("c",true);
+$("tformbox").innerHTML=formHTML("t",false);
+["c","t"].forEach(function(p){
+  ["Mode","D1"].forEach(function(k){$(p+k).addEventListener("change",function(){updForm(p);});});
+  if($(p+"All")) $(p+"All").addEventListener("change",function(){updForm(p);});
+});
+
 // ===== Googleカレンダー連携 =====
 var CLIENT_ID="67610132940-8ges0up9jivd99ihlidbba5bqm7j2u77.apps.googleusercontent.com";
 var GCAL_SCOPE="https://www.googleapis.com/auth/calendar.events";
-var GTOKKEY="kotei_gtoken_v1", gToken=null, gTokenExp=0, tokenClient=null;
+var EVURL="https://www.googleapis.com/calendar/v3/calendars/primary/events";
+var HOLURL="https://www.googleapis.com/calendar/v3/calendars/"+encodeURIComponent("ja.japanese#holiday@group.v.calendar.google.com")+"/events";
+var gToken=null, gTokenExp=0, tokenClient=null, refreshTimer=null, lastRef=0;
 try{ var gt=JSON.parse(localStorage.getItem(GTOKKEY)); if(gt&&gt.exp>Date.now()){gToken=gt.token;gTokenExp=gt.exp;} }catch(e){}
-var refreshTimer=null;
 function scheduleRefresh(){
   if(refreshTimer){clearTimeout(refreshTimer);refreshTimer=null;}
   if(!gToken) return;
-  var wait=gTokenExp-Date.now()-5*60000;
-  if(wait<1000) wait=1000;
-  refreshTimer=setTimeout(function(){
-    if(tokenClient) tokenClient.requestAccessToken({prompt:""});
-  },wait);
+  var wait=gTokenExp-Date.now()-5*60000; if(wait<1000) wait=1000;
+  refreshTimer=setTimeout(function(){ if(tokenClient) tokenClient.requestAccessToken({prompt:""}); },wait);
 }
 function saveToken(token,expSec){
   gToken=token; gTokenExp=Date.now()+((expSec||3500)-60)*1000;
@@ -224,69 +339,72 @@ function saveToken(token,expSec){
   scheduleRefresh();
 }
 function gcalConnected(){return !!gToken && Date.now()<gTokenExp;}
-var gcalAt=0;
+function refreshNow(){ if(tokenClient&&Date.now()-lastRef>300000){lastRef=Date.now();try{tokenClient.requestAccessToken({prompt:""});}catch(e){}} }
+function gapi(url,opt){
+  opt=opt||{};opt.headers={"Authorization":"Bearer "+gToken,"Content-Type":"application/json"};
+  return fetch(url,opt).then(function(r){
+    if(r.status===401){gTokenExp=0;updateGcalStatus();refreshNow();throw new Error("401");}
+    return r.status===204?{ok:1}:r.json();
+  });
+}
+var calAt=0;
 function updateGcalStatus(){
   var on=gcalConnected();
-  $("gcalstatus").textContent=on?"連携中"+(gcalAt?"(最終更新 "+fmt(gcalAt)+")":""):"未連携。連携するとカレンダーと同期できる";
+  $("gcalstatus").textContent=on?"連携中"+(calAt?"(最終更新 "+fmt(calAt)+")":""):"未連携。連携するとカレンダーと同期できる";
   $("gcalbtn").textContent=on?"再連携する":"Googleと連携する";
   $("pill").textContent=on?"カレンダー連携中":"未連携";
   $("pill").className="pill"+(on?" on":"");
-  $("addnote").textContent=on?"":"先に上の「Googleと連携する」を押してね";
+  $("addnote").textContent=on?"":"先に「Googleと連携する」を押してね";
 }
 function initGcal(){
   if(!window.google||!google.accounts||!google.accounts.oauth2){setTimeout(initGcal,300);return;}
   tokenClient=google.accounts.oauth2.initTokenClient({
     client_id:CLIENT_ID, scope:GCAL_SCOPE,
-    callback:function(resp){ if(resp&&resp.access_token){saveToken(resp.access_token,resp.expires_in);updateGcalStatus();fetchGcalToday();syncBackup();} }
+    callback:function(resp){ if(resp&&resp.access_token){saveToken(resp.access_token,resp.expires_in);updateGcalStatus();fetchCal();syncBackup();} }
   });
   updateGcalStatus();
-  if(gcalConnected()){ scheduleRefresh(); fetchGcalToday(); syncBackup(); }
-  setInterval(function(){if(!document.hidden)fetchGcalToday();},30000);
-  document.addEventListener('visibilitychange',function(){if(!document.hidden)fetchGcalToday();});
-  window.addEventListener('focus',fetchGcalToday);
+  if(gcalConnected()){ scheduleRefresh(); fetchCal(); syncBackup(); }
+  setInterval(function(){if(!document.hidden)fetchCal();},30000);
+  document.addEventListener("visibilitychange",function(){if(!document.hidden)fetchCal();});
+  window.addEventListener("focus",fetchCal);
 }
+// 実行記録をカレンダーに残す(一覧には出さない印を付ける)
 function gcalCreate(entry,detail){
   if(!gcalConnected()) return;
-  fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events",{
-    method:"POST",
-    headers:{"Authorization":"Bearer "+gToken,"Content-Type":"application/json"},
-    body:JSON.stringify({summary:entry.n,description:detail||"",start:{dateTime:new Date(entry.s).toISOString()},end:{dateTime:new Date(entry.s+60000).toISOString()}})
-  }).then(function(r){return r.json();}).then(function(d){ if(d&&d.id){entry.gid=d.id; save();} }).catch(function(){});
+  gapi(EVURL,{method:"POST",body:JSON.stringify({summary:entry.n,description:detail||"",start:{dateTime:new Date(entry.s).toISOString()},end:{dateTime:new Date(entry.s+60000).toISOString()},extendedProperties:{"private":{koteiLog:"1"}}})})
+    .then(function(d){ if(d&&d.id){entry.gid=d.id; save();} }).catch(function(){});
 }
 function gcalPatchEnd(entry){
   if(!gcalConnected()||!entry.gid) return;
-  fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events/"+entry.gid,{
-    method:"PATCH",
-    headers:{"Authorization":"Bearer "+gToken,"Content-Type":"application/json"},
-    body:JSON.stringify({end:{dateTime:new Date(entry.e).toISOString()}})
-  }).catch(function(){});
+  gapi(EVURL+"/"+entry.gid,{method:"PATCH",body:JSON.stringify({end:{dateTime:new Date(entry.e).toISOString()}})}).catch(function(){});
 }
-var gcalEventsToday=[], lastRef=0;
-var EVURL="https://www.googleapis.com/calendar/v3/calendars/primary/events";
-function refreshNow(){ if(tokenClient&&Date.now()-lastRef>300000){lastRef=Date.now();try{tokenClient.requestAccessToken({prompt:""});}catch(e){}} }
-function gapi(url,opt){
-  opt=opt||{};opt.headers={"Authorization":"Bearer "+gToken,"Content-Type":"application/json"};
-  return fetch(url,opt).then(function(r){ if(r.status===401){gTokenExp=0;updateGcalStatus();refreshNow();throw new Error("401");} return r.json(); });
+var CAL=[], HOL={}, holFail=false, RANGE=14;
+function norm(ev){
+  var all=!!ev.start.date&&!ev.start.dateTime, s=ev.start.dateTime?new Date(ev.start.dateTime):null, e=(ev.end&&ev.end.dateTime)?new Date(ev.end.dateTime):null;
+  var sd=all?ev.start.date:ymd(s), ed=all?((ev.end&&ev.end.date)?addDays(ev.end.date,-1):sd):(e?ymd(e):sd);
+  if(ed<sd) ed=sd;
+  return {id:ev.id,rid:ev.recurringEventId||"",name:ev.summary||"(無題)",detail:ev.description||"",all:all,sd:sd,ed:ed,st:s?fmt(s.getTime()):"",et:e?fmt(e.getTime()):""};
 }
-function fetchGcalToday(){
-  if(!gcalConnected()){ if(gToken) refreshNow(); gcalEventsToday=[]; updateGcalStatus(); renderTasks(running()); return; }
+function fetchCal(){
+  if(!gcalConnected()){ if(gToken) refreshNow(); CAL=[]; updateGcalStatus(); renderTasks(running()); renderCalList(); return; }
   var d0=new Date();d0.setHours(0,0,0,0);
-  var d1=new Date(d0.getTime()+86400000);
-  gapi(EVURL+"?timeMin="+encodeURIComponent(d0.toISOString())+"&timeMax="+encodeURIComponent(d1.toISOString())+"&singleEvents=true&orderBy=startTime&maxResults=100").then(function(d){
+  var d1=new Date(d0.getTime()+RANGE*86400000);
+  var q="?timeMin="+encodeURIComponent(d0.toISOString())+"&timeMax="+encodeURIComponent(d1.toISOString())+"&singleEvents=true&orderBy=startTime&maxResults=250";
+  gapi(EVURL+q).then(function(d){
     var mine=log.filter(function(x){return x.gid;}).map(function(x){return x.gid;});
-    gcalEventsToday=(d.items||[]).filter(function(ev){
-      var xp=ev.extendedProperties&&ev.extendedProperties.private;
-      return mine.indexOf(ev.id)<0 && ev.start && ev.status!=="cancelled" && !(xp&&xp.koteiData);
-    }).map(function(ev){
-      var allDay=!!ev.start.date&&!ev.start.dateTime;
-      var st=ev.start.dateTime, en=ev.end&&ev.end.dateTime;
-      return {name:ev.summary||"(無題)", detail:ev.description||"", allDay:allDay, startTxt:st?fmt(new Date(st).getTime()):"", endTxt:en?fmt(new Date(en).getTime()):""};
-    });
-    gcalAt=Date.now(); updateGcalStatus(); renderTasks(running());
+    CAL=(d.items||[]).filter(function(ev){
+      var xp=ev.extendedProperties&&ev.extendedProperties["private"];
+      return ev.start && ev.status!=="cancelled" && mine.indexOf(ev.id)<0 && !(xp&&(xp.koteiData||xp.koteiLog));
+    }).map(norm);
+    calAt=Date.now(); updateGcalStatus(); renderTasks(running()); renderCalList();
+  }).catch(function(){});
+  if(!holFail) gapi(HOLURL+q).then(function(d){
+    if(d.error){holFail=true;return;}
+    HOL={};(d.items||[]).forEach(function(ev){ if(ev.start&&ev.start.date) HOL[ev.start.date]=ev.summary||"祝日"; });
+    renderTasks(running()); renderCalList();
   }).catch(function(){});
 }
-// ===== Googleへのバックアップ(メインタスク) =====
-var TSKEY="kotei_tasks_ts";
+// ===== Googleへのバックアップ(ツールタスク) =====
 function tasksTs(){try{return +(localStorage.getItem(TSKEY)||0);}catch(e){return 0;}}
 function setTs(){try{localStorage.setItem(TSKEY,String(Date.now()));}catch(e){}}
 function bkMsg(t){var e=$("bkstatus");if(e)e.textContent="バックアップ: "+t;}
@@ -297,8 +415,10 @@ function findBackup(){
 }
 function pushBackup(){
   if(!gcalConnected()){bkMsg("Google未連携のため、この端末にだけ保存されている");return Promise.resolve();}
+  var js=JSON.stringify({v:2,ts:tasksTs(),tasks:TASKS});
+  if(js.length>8000){bkMsg("ツールタスクが多すぎてGoogleに保存できない(端末には保存済み)");return Promise.resolve();}
   bkMsg("Googleに保存中…");
-  var body={summary:"【工程管理】バックアップデータ(消さないで)",description:JSON.stringify({v:1,ts:tasksTs(),tasks:TASKS}),
+  var body={summary:"【工程管理】バックアップデータ(消さないで)",description:js,
     start:{date:"2000-01-01"},end:{date:"2000-01-02"},transparency:"transparent",visibility:"private",
     reminders:{useDefault:false},extendedProperties:{"private":{koteiData:"1"}}};
   return findBackup().then(function(ev){
@@ -308,32 +428,26 @@ function pushBackup(){
 function syncBackup(){
   if(!gcalConnected()) return;
   findBackup().then(function(ev){
-    var rd=null;if(ev&&ev.description){try{rd=JSON.parse(ev.description);}catch(e){}}
-    if(rd&&rd.tasks&&rd.ts>tasksTs()){
-      TASKS=rd.tasks;
-      try{localStorage.setItem(TKEY,JSON.stringify(TASKS));localStorage.setItem(TSKEY,String(rd.ts));}catch(e){}
-      render();bkMsg("Googleのバックアップから復元した");
-    }else if((rd&&tasksTs()>rd.ts)||(!rd&&TASKS.length)){pushBackup();}
+    var r=null;if(ev&&ev.description){try{r=JSON.parse(ev.description);}catch(e){}}
+    if(r&&r.tasks&&r.ts>tasksTs()){
+      TASKS=normalize(r.tasks);saveTasksLocal();
+      try{localStorage.setItem(TSKEY,String(r.ts));}catch(e){}
+      render();renderToolList();bkMsg("Googleのバックアップから復元した");
+    }else if((r&&tasksTs()>r.ts)||(!r&&TASKS.length)){pushBackup();}
     else bkMsg("Googleに保存済み");
   }).catch(function(){});
 }
-// ===============================
-function $(id){return document.getElementById(id);}
-function tm(s){var p=s.split(":");return +p[0]*60+ +p[1];}
-function plen(t){var d=tm(t[2])-tm(t[1]);return d<=0?d+1440:d;}
-function nowMin(){var d=new Date();return d.getHours()*60+d.getMinutes();}
-function fmt(ms){var d=new Date(ms);return ("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2);}
-function dur(ms){var m=Math.round(ms/60000);return m>=60?Math.floor(m/60)+"時間"+(m%60)+"分":m+"分";}
-function day0(){var d=new Date();d.setHours(0,0,0,0);return d.getTime();}
+
+// ===== 実行(開始・終了) =====
 function running(){for(var i=log.length-1;i>=0;i--) if(log[i].e===null) return log[i]; return null;}
-function inWin(t,n){var s=tm(t[1]),e=tm(t[2]);return s<e?(n>=s&&n<e):(n>=s||n<e);}
 function suggested(){
-  if(!TASKS.length) return {t:null,now:false,in:0};
+  var L=TT();
+  if(!L.length) return {t:null,now:false,in:0};
   var n=nowMin(),i;
-  for(i=0;i<TASKS.length;i++) if(!isSkipped(TASKS[i][0])&&inWin(TASKS[i],n)) return {t:TASKS[i],now:true};
+  for(i=0;i<L.length;i++) if(!isSkipped(L[i][0])&&inWin(L[i],n)) return {t:L[i],now:true};
   var best=null,bd=9999;
-  TASKS.forEach(function(t){if(isSkipped(t[0]))return;var d=(tm(t[1])-n+1440)%1440;if(d<bd){bd=d;best=t;}});
-  if(!best){best=TASKS[0];bd=0;}
+  L.forEach(function(t){if(isSkipped(t[0]))return;var d=(tm(t[1])-n+1440)%1440;if(d<bd){bd=d;best=t;}});
+  if(!best){best=L[0];bd=0;}
   return {t:best,now:false,in:bd};
 }
 function stopRun(){var r=running();if(r){ r.e=Date.now(); gcalPatchEnd(r); }}
@@ -341,22 +455,19 @@ function start(name,planned,detail){
   var r=running();
   if(r&&r.n===name) return;
   stopRun();
-  var entry={n:name,s:Date.now(),e:null,p:planned};
+  var det=detail!=null?detail:(function(){var pt=TT().filter(function(t){return t[0]===name;})[0];return pt&&pt[3]?pt[3]:"";})();
+  var entry={n:name,s:Date.now(),e:null,p:planned,dt:det};
   log.push(entry);
   save(); render();
-  var det = detail!=null ? detail : (function(){var pt=TASKS.filter(function(t){return t[0]===name;})[0];return pt&&pt[3]?pt[3]:"";})();
   gcalCreate(entry,det);
 }
 function stopAll(){stopRun();save();render();}
 function nextInOrder(name){
-  var idx=-1;
-  for(var i=0;i<TASKS.length;i++) if(TASKS[i][0]===name){idx=i;break;}
-  if(idx<0) return null;
-  for(var k=1;k<=TASKS.length;k++){
-    var cand=TASKS[(idx+k)%TASKS.length];
-    if(!isSkipped(cand[0])) return cand;
-  }
-  return null;
+  var L=TT().filter(function(t){return !isSkipped(t[0]);});
+  var idx=-1;for(var i=0;i<L.length;i++) if(L[i][0]===name){idx=i;break;}
+  if(!L.length) return null;
+  if(idx<0){ var n=nowMin();for(var j=0;j<L.length;j++) if(tm(L[j][1])>=n) return L[j]; return null; }
+  return L[(idx+1)%L.length].n===name?null:L[(idx+1)%L.length];
 }
 function endAndAdvance(){
   var r=running();if(!r) return;
@@ -364,92 +475,114 @@ function endAndAdvance(){
   if(nx) start(nx[0],true); else stopAll();
 }
 
+// ===== 画面描画 =====
 function render(){
   if(SKDAY!==todayStr()){SKDAY=todayStr();SKIP=[];saveSkip();}
-  var d=new Date(),r=running(),sg=suggested();
+  var d=new Date(),r=running(),sg=suggested(),btn=$("mainbtn"),L=TT();
   $("date").textContent=(d.getMonth()+1)+"/"+d.getDate()+" ("+"日月火水木金土"[d.getDay()]+")";
   $("clock").textContent=fmt(Date.now());
-  var btn=$("mainbtn");
-  $("stopbtn").hidden=!r;
-  $("stopbtn").textContent="中断する";
-  $("stopbtn").onclick=stopAll;
+  $("stopbtn").hidden=!r;$("stopbtn").onclick=stopAll;
+  $("herobarwrap").hidden=true;
   if(r){
     $("nowlabel").textContent="実行中";
     $("nowname").textContent=r.n;
     var meta=fmt(r.s)+"から "+dur(Date.now()-r.s);
-    var pt=TASKS.filter(function(t){return t[0]===r.n;})[0];
-    if(pt) meta+=" / 予定 "+pt[1]+"〜"+pt[2];
+    var pt=L.filter(function(t){return t[0]===r.n;})[0];
+    if(pt){ meta+=" / 予定 "+pt[1]+"〜"+pt[2]; $("herobarwrap").hidden=false; $("herobar").style.width=Math.min(100,Math.round((Date.now()-r.s)/60000/plen(pt)*100))+"%"; }
     $("nowmeta").textContent=meta;
-    $("nowdetail").textContent=(pt&&pt[3])?pt[3]:"";
+    $("nowdetail").textContent=(pt&&pt[3])?pt[3]:(r.dt||"");
     btn.textContent="「"+r.n+"」を終了して次へ";
     btn.onclick=endAndAdvance;
+  }else if(!sg.t){
+    $("nowlabel").textContent="ツールタスク";
+    $("nowname").textContent=TASKS.length?"きょうの分はなし":"まだ登録がない";
+    $("nowmeta").textContent="「ツールタスク」タブで追加・確認できる";
+    $("nowdetail").textContent="";
+    btn.textContent="ツールタスクを開く";
+    btn.onclick=function(){showPane("tool");};
   }else{
-    if(!sg.t){
-      $("nowlabel").textContent="予定";
-      $("nowname").textContent="未設定";
-      $("nowmeta").textContent="「メイン」タブでタスクを作ると、ここに出る";
-      $("nowdetail").textContent="";
-      btn.textContent="メインタスクを作る";
-      btn.onclick=function(){showPane("main");};
-    }else{
-    $("nowlabel").textContent=sg.now?"いまの予定":"次の予定";
+    $("nowlabel").textContent=sg.now?"いまのタスク":"次のタスク";
     $("nowname").textContent=sg.t[0];
     $("nowmeta").textContent=sg.t[1]+"〜"+sg.t[2]+(sg.now?"":"(あと"+dur(sg.in*60000)+")");
     btn.textContent=sg.t[0]+" を開始";
     $("nowdetail").textContent=sg.t[3]||"";
     btn.onclick=function(){start(sg.t[0],true);};
-    }
   }
   renderTasks(r); renderRes();
 }
+function mkItem(o){
+  var li=document.createElement("li");li.className="it";
+  var t=document.createElement("div");t.className="tm";t.innerHTML=o.t2?esc(o.t1)+"<small>"+esc(o.t2)+"</small>":esc(o.t1);
+  var bd=document.createElement("div");bd.className="bd"+(o.cur?" cur":"");
+  bd.innerHTML="<div class='nm'>"+esc(o.name)+(o.badge||"")+"</div>"+(o.sub?"<div class='meta'>"+o.sub+"</div>":"");
+  var dt=document.createElement("div");dt.className="dt";dt.hidden=true;dt.textContent=o.detail||"詳細なし";
+  bd.appendChild(dt);bd.onclick=function(){dt.hidden=!dt.hidden;};
+  if(o.dim) li.style.opacity=".5";
+  li.appendChild(t);li.appendChild(bd);
+  if(o.btns){var a=document.createElement("div");a.className="act";o.btns.forEach(function(b){var x=document.createElement("button");x.className="ghost sm"+(b.cls?" "+b.cls:"");x.textContent=b.t;x.onclick=b.f;a.appendChild(x);});li.appendChild(a);}
+  return li;
+}
+function todayCal(){var t=todayStr();return CAL.filter(function(x){return x.sd<=t&&x.ed>=t;});}
 function renderTasks(r){
   var ul=$("tasklist");ul.innerHTML="";
-  if(!TASKS.length){ul.innerHTML="<li class='meta'>メインタスクはまだない。「メイン」タブで作れる</li>";}
-  TASKS.forEach(function(t){
-    var li=document.createElement("li");
-    var isCur=r&&r.n===t[0];
-    li.style.flexWrap="wrap";
-    var info=document.createElement("span");info.style.cursor="pointer";info.className=isCur?"cur":"";
-    info.innerHTML="<span class='tag'>メイン</span>"+t[0]+"<br><span class='meta'>"+t[1]+"〜"+t[2]+(t[3]?" ・詳細あり":"")+"</span>";
-    var dt=document.createElement("div");dt.className="meta";dt.style.flexBasis="100%";dt.style.whiteSpace="pre-wrap";dt.hidden=true;
-    dt.textContent=t[3]||"詳細なし(編集画面で追加できる)";
-    info.onclick=function(){dt.hidden=!dt.hidden;};
-    li.appendChild(info);
-    var b=document.createElement("button");b.className="ghost";b.textContent=isCur?"実行中":"開始";
-    b.onclick=function(){start(t[0],true);};
-    var sk=document.createElement("button");sk.className="ghost";sk.textContent=isSkipped(t[0])?"戻す":"今日はやらない";
-    sk.onclick=function(){var k=SKIP.indexOf(t[0]);if(k>=0)SKIP.splice(k,1);else SKIP.push(t[0]);saveSkip();render();};
-    if(isSkipped(t[0])){info.style.opacity=".5";info.querySelector(".meta").textContent+=" ・今日はスキップ";}
-    li.appendChild(b);li.appendChild(sk);li.appendChild(dt);ul.appendChild(li);
+  var L=TT();
+  if(!L.length) ul.innerHTML="<li class='meta'>"+(TASKS.length?"きょうのツールタスクはなし":"ツールタスクはまだない。「ツールタスク」タブで作れる")+"</li>";
+  L.forEach(function(t){
+    var isCur=r&&r.n===t[0],sk=isSkipped(t[0]);
+    ul.appendChild(mkItem({t1:t[1],t2:t[2],name:t[0],sub:sk?"今日はスキップ":"",detail:t[3],cur:isCur,dim:sk,
+      btns:[{t:isCur?"実行中":"開始",f:function(){start(t[0],true);}},{t:sk?"戻す":"今日はスキップ",f:function(){var k=SKIP.indexOf(t[0]);if(k>=0)SKIP.splice(k,1);else SKIP.push(t[0]);saveSkip();render();}}]}));
   });
-  var gl=$("gcaltasklist");
-  if(gl){
-    gl.innerHTML="";
-    if(!gcalConnected()){gl.innerHTML="<li class='meta'>連携すると、カレンダー側の予定もここに出る</li>";}
-    else if(!gcalEventsToday.length){gl.innerHTML="<li class='meta'>カレンダーに今日の予定はなし</li>";}
-    gcalEventsToday.forEach(function(ev){
-      var li=document.createElement("li");li.style.flexWrap="wrap";
-      var isCur=r&&r.n===ev.name;
-      var info=document.createElement("span");info.style.cursor="pointer";info.className=isCur?"cur":"";
-      info.innerHTML="<span class='tag g'>カレンダー</span>"+ev.name+"<br><span class='meta'>"+(ev.allDay?"終日":ev.startTxt+"〜"+ev.endTxt)+(ev.detail?" ・詳細あり":"")+"</span>";
-      var dt=document.createElement("div");dt.className="meta";dt.style.flexBasis="100%";dt.style.whiteSpace="pre-wrap";dt.hidden=true;
-      dt.textContent=ev.detail||"詳細なし";
-      info.onclick=function(){dt.hidden=!dt.hidden;};
-      var b=document.createElement("button");b.className="ghost";b.textContent=isCur?"実行中":"開始";
-      b.onclick=function(){start(ev.name,false,ev.detail);};
-      li.appendChild(info);li.appendChild(b);li.appendChild(dt);gl.appendChild(li);
+  var gl=$("gcaltasklist");gl.innerHTML="";
+  var tc=todayCal();
+  if(!gcalConnected()) gl.innerHTML="<li class='meta'>Googleと連携すると、カレンダーの予定もここに出る</li>";
+  else if(!tc.length) gl.innerHTML="<li class='meta'>カレンダーに今日の予定はなし</li>";
+  tc.forEach(function(ev){
+    var isCur=r&&r.n===ev.name;
+    gl.appendChild(mkItem({t1:ev.all?"終日":ev.st,t2:ev.all?"":ev.et,name:ev.name,badge:ev.rid?" <span class='tag'>くり返し</span>":"",detail:ev.detail,cur:isCur,
+      btns:[{t:isCur?"実行中":"開始",f:function(){start(ev.name,"cal",ev.detail);}}]}));
+  });
+  var h=$("holnote"),hn=HOL[todayStr()];h.hidden=!hn;if(hn)h.textContent="今日は祝日: "+hn;
+}
+function renderCalList(){
+  var box=$("callist");if(!box)return;box.innerHTML="";
+  if(!gcalConnected()){box.innerHTML="<div class='meta' style='margin-top:10px'>Googleと連携すると、ここに予定が並ぶ</div>";return;}
+  var by={},dates=[];
+  CAL.forEach(function(ev){(by[ev.sd]=by[ev.sd]||[]).push(ev);});
+  var end=addDays(todayStr(),RANGE-1);
+  Object.keys(by).forEach(function(k){dates.push(k);});
+  Object.keys(HOL).forEach(function(k){if(k>=todayStr()&&k<=end&&dates.indexOf(k)<0)dates.push(k);});
+  dates.sort();
+  if(!dates.length){box.innerHTML="<div class='meta' style='margin-top:10px'>この期間の予定はなし</div>";return;}
+  dates.forEach(function(ds){
+    var h=document.createElement("div");h.className="dh"+(ds===todayStr()?" today":"");
+    h.innerHTML=esc(mdw(ds))+(ds===todayStr()?" <span class='tag'>今日</span>":"")+(HOL[ds]?" <span class='tag h'>"+esc(HOL[ds])+"</span>":"");
+    box.appendChild(h);
+    var ul=document.createElement("ul");ul.className="list";
+    (by[ds]||[]).forEach(function(ev){
+      var span=ev.ed>ev.sd?" 〜"+md(ev.ed)+"まで":"";
+      ul.appendChild(mkItem({t1:ev.all?"終日":ev.st,t2:ev.all?"":ev.et,name:ev.name,badge:ev.rid?" <span class='tag'>くり返し</span>":"",sub:esc(span),detail:ev.detail,
+        btns:[{t:"編集",f:function(){openCalEdit(ev.id);}}]}));
     });
-  }
+    if(!by[ds]) ul.innerHTML="<li class='meta'>予定なし</li>";
+    box.appendChild(ul);
+  });
+}
+function renderToolList(){
+  var ul=$("toollist");ul.innerHTML="";
+  if(!TASKS.length){ul.innerHTML="<li class='meta'>まだない。上のボタンから追加してね</li>";return;}
+  var ds=todayStr();
+  TASKS.forEach(function(t){
+    ul.appendChild(mkItem({t1:t.s,t2:t.e,name:t.n,badge:occurs(t,ds)?" <span class='tag g'>きょうある</span>":"",sub:esc(describe(t)),detail:t.d,
+      btns:[{t:"編集",f:function(){openToolEdit(t.id);}}]}));
+  });
 }
 function renderRes(){
-  var d0=day0(),now=Date.now();
+  var d0=day0(),now=Date.now(),L=TT();
   var todays=log.filter(function(x){return (x.e===null?now:x.e)>=d0;});
-  function actual(name){
-    var sum=0;todays.forEach(function(x){if(x.n===name){sum+=(x.e===null?now:x.e)-Math.max(x.s,d0);}});return sum;
-  }
+  function actual(name){var s=0;todays.forEach(function(x){if(x.n===name){s+=(x.e===null?now:x.e)-Math.max(x.s,d0);}});return s;}
   var ul=$("reslist");ul.innerHTML="";var done=0;
-  TASKS.forEach(function(t){
-    if(isSkipped(t[0])){var sl=document.createElement("li");sl.style.display="block";sl.innerHTML="<div class='row' style='justify-content:space-between'><span>"+t[0]+"</span><span class='meta'>スキップ</span></div>";ul.appendChild(sl);return;}
+  L.forEach(function(t){
+    if(isSkipped(t[0])){var sl=document.createElement("li");sl.style.display="block";sl.innerHTML="<div class='row' style='justify-content:space-between'><span>"+esc(t[0])+"</span><span class='meta'>スキップ</span></div>";ul.appendChild(sl);return;}
     var a=actual(t[0]),pm=plen(t),am=a/60000,pct=Math.min(100,Math.round(am/pm*100));
     var first=null;todays.forEach(function(x){if(x.n===t[0]&&x.s>=d0&&!first) first=x;});
     var st,cl="";
@@ -459,113 +592,175 @@ function renderRes(){
       if(g>720)g-=1440;if(g<-720)g+=1440;
       gap=g===0?"開始 予定通り":g>0?"開始 "+g+"分遅れ":"開始 "+(-g)+"分早い";}
     var li=document.createElement("li");li.style.display="block";
-    li.innerHTML="<div class='row' style='justify-content:space-between'><span>"+t[0]+"</span><span class='"+cl+"'>"+st+"</span></div>"+
-      "<div class='meta'>実績 "+dur(a)+" / 予定 "+dur(pm*60000)+(gap?" / "+gap:"")+"</div>"+
-      "<div class='bar'><i style='width:"+pct+"%'></i></div>";
+    li.innerHTML="<div class='row' style='justify-content:space-between'><span>"+esc(t[0])+"</span><span class='"+cl+"'>"+st+"</span></div>"+
+      "<div class='meta'>実績 "+dur(a)+" / 予定 "+dur(pm*60000)+(gap?" / "+gap:"")+"</div><div class='bar'><i style='width:"+pct+"%'></i></div>";
     ul.appendChild(li);
   });
-  $("score").textContent=done+" / "+TASKS.filter(function(t){return !isSkipped(t[0]);}).length+" 達成";
+  if(!L.length) ul.innerHTML="<li class='meta'>きょうのツールタスクはなし</li>";
+  $("score").textContent=done+" / "+L.filter(function(t){return !isSkipped(t[0]);}).length+" 達成";
   var extra=0;todays.forEach(function(x){if(!x.p) extra+=(x.e===null?now:x.e)-Math.max(x.s,d0);});
   $("scoremeta").textContent="割り込み合計 "+dur(extra);
   var ll=$("loglist");ll.innerHTML="";
-  if(!todays.length){ll.innerHTML="<li class='meta'>まだ記録なし。上のボタンで開始しよう</li>";}
+  if(!todays.length) ll.innerHTML="<li class='meta'>まだ記録なし。ホームのボタンで開始しよう</li>";
   todays.slice().reverse().forEach(function(x){
     var li=document.createElement("li");
-    li.innerHTML="<span>"+x.n+(x.p?"":" <span class='warn'>(割り込み)</span>")+"</span><span class='meta'>"+fmt(x.s)+"〜"+(x.e===null?"実行中":fmt(x.e))+"</span>";
+    li.innerHTML="<span>"+esc(x.n)+(x.p===true?"":x.p==="cal"?" <span class='tag g'>カレンダー</span>":" <span class='warn'>(割り込み)</span>")+"</span><span class='meta'>"+fmt(x.s)+"〜"+(x.e===null?"実行中":fmt(x.e))+"</span>";
     ll.appendChild(li);
   });
 }
-var draft=[];
-function mm(m){m=((m%1440)+1440)%1440;return ("0"+Math.floor(m/60)).slice(-2)+":"+("0"+(m%60)).slice(-2);}
-function moveTask(i,dir){
-  var j=i+dir;if(j<0||j>=draft.length) return;
-  var lo=Math.min(i,j),hi=Math.max(i,j),P=draft[lo],Q=draft[hi];
-  if(!P[1]||!P[2]||!Q[1]||!Q[2]||isNaN(tm(P[1]))||isNaN(tm(Q[1]))){alert("時刻が空のタスクは入れ替えできない");return;}
-  var lp=plen(P),lq=plen(Q),st=tm(P[1]);
-  var Q2=[Q[0],mm(st),mm(st+lq),Q[3]||""];
-  var P2=[P[0],mm(st+lq),mm(st+lq+lp),P[3]||""];
-  draft[lo]=Q2;draft[hi]=P2;renderEdit();
+
+// ===== ツールタスクの追加・編集・削除 =====
+function openToolForm(t){
+  editingTask=t?t.id:null;
+  $("tformtitle").textContent=t?"ツールタスクを編集":"ツールタスクを追加";
+  $("tsave").textContent=t?"変更を保存":"追加する";
+  $("tdelwrap").hidden=!t;
+  fillForm("t",t?{m:t.m,d1:t.d1,d2:t.d2,t1:t.s,t2:t.e,title:t.n,det:t.d,wk:t.wk}:{m:"daily",d1:todayStr(),d2:"",t1:"",t2:"",title:"",det:"",wk:[]});
+  $("tformcard").hidden=false;$("tmsg").textContent="";$("tformcard").scrollIntoView({behavior:"smooth"});
 }
-function renderEdit(){
-  var ul=$("editlist");ul.innerHTML="";
-  draft.forEach(function(t,i){
-    var li=document.createElement("li");li.style.flexWrap="wrap";
-    var n=document.createElement("input");n.type="text";n.maxLength=20;n.value=t[0];n.placeholder="タスク名";n.style.flexBasis="40%";
-    n.oninput=function(){draft[i][0]=n.value;};
-    var s=document.createElement("input");s.type="time";s.value=t[1];s.onchange=function(){draft[i][1]=s.value;};
-    var sep=document.createElement("span");sep.textContent="〜";sep.className="meta";
-    var e=document.createElement("input");e.type="time";e.value=t[2];e.onchange=function(){draft[i][2]=e.value;};
-    var d=document.createElement("button");d.className="ghost";d.textContent="削除";
-    d.onclick=function(){draft.splice(i,1);renderEdit();};
-    var dtl=document.createElement("input");dtl.type="text";dtl.maxLength=200;dtl.value=t[3]||"";dtl.placeholder="詳細(なくてもOK)";dtl.style.flexBasis="100%";
-    dtl.oninput=function(){draft[i][3]=dtl.value;};
-    var up=document.createElement("button");up.className="ghost";up.textContent="↑";up.onclick=function(){moveTask(i,-1);};
-    var dn=document.createElement("button");dn.className="ghost";dn.textContent="↓";dn.onclick=function(){moveTask(i,1);};
-    var br=document.createElement("div");br.style.flexBasis="100%";br.style.height="0";
-    li.appendChild(n);li.appendChild(up);li.appendChild(dn);li.appendChild(br);li.appendChild(s);li.appendChild(sep);li.appendChild(e);li.appendChild(d);li.appendChild(dtl);
-    ul.appendChild(li);
-  });
+function openToolEdit(id){var t=TASKS.filter(function(x){return x.id===id;})[0];if(t)openToolForm(t);}
+function commitTasks(msg){
+  setTs();saveTasksLocal();$("tformcard").hidden=true;$("tmsg").textContent=msg;
+  render();renderToolList();pushBackup();
 }
-$("addtask").onclick=function(){draft.push(["","09:00","10:00"]);renderEdit();};
-$("canceledit").onclick=function(){draft=JSON.parse(JSON.stringify(TASKS));renderEdit();$("savemsg").textContent="";};
-$("savetasks").onclick=function(){
-  var out=[],i,t;
-  for(i=0;i<draft.length;i++){
-    t=draft[i];
-    var nm=(t[0]||"").trim();
-    if(!nm){alert((i+1)+"行目: タスク名が空");return;}
-    if(!t[1]||!t[2]||t[1]===t[2]){alert(nm+": 開始と終了の時刻を確認して");return;}
-    out.push([nm,t[1],t[2],(t[3]||"").trim()]);
-  }
-  TASKS=out;setTs();
-  try{localStorage.setItem(TKEY,JSON.stringify(TASKS));}catch(e){}
-  $("savemsg").textContent="保存した";render();pushBackup();
+$("topen").onclick=function(){openToolForm(null);};
+$("tcancel").onclick=function(){$("tformcard").hidden=true;};
+$("tsave").onclick=function(){
+  var o=rd("t"),err=validate(o,true);
+  if(!err&&o.t1===o.t2&&o.m!=="span") err="開始と終了が同じ時刻になってる";
+  if(!err&&o.m==="span"&&o.d1===o.d2&&o.t2<=o.t1) err="終了が開始より前になってる";
+  if(err){alert(err);return;}
+  var wk=o.m==="weekly"?(o.wk.length?o.wk:[wd(o.d1)]):[];
+  var t={id:editingTask||uid(),n:o.title.slice(0,30),s:o.t1,e:o.t2,d:o.det,m:o.m,d1:o.d1,d2:o.m==="once"?"":o.d2,wk:wk};
+  var i=-1;TASKS.forEach(function(x,k){if(x.id===t.id)i=k;});
+  if(i>=0) TASKS[i]=t; else TASKS.push(t);
+  commitTasks(editingTask?"変更を保存した":"追加した");
 };
+$("tdel").onclick=function(){
+  if(!editingTask||!confirm("このツールタスクを削除する?"))return;
+  TASKS=TASKS.filter(function(x){return x.id!==editingTask;});
+  commitTasks("削除した");
+};
+
+// ===== カレンダー予定の追加・編集・削除 =====
+function openCalForm(ev){
+  editingEv=ev||null;
+  $("cformtitle").textContent=ev?"カレンダーの予定を編集":"カレンダーに予定を追加";
+  $("csave").textContent=ev?"変更を保存":"カレンダーに追加";
+  $("cscopewrap").hidden=!(ev&&ev.rid);$("cscope").value="one";
+  $("cdelwrap").hidden=!ev;$("cdelall").hidden=!(ev&&ev.rid);
+  if(ev) fillForm("c",{m:"span",d1:ev.sd,d2:ev.ed>ev.sd?ev.ed:"",t1:ev.st,t2:ev.et,all:ev.all,title:ev.name,det:ev.detail,wk:[]});
+  else fillForm("c",{m:"once",d1:todayStr(),d2:"",t1:"",t2:"",all:false,title:"",det:"",wk:[]});
+  $("cformcard").hidden=false;$("addmsg").textContent="";$("cformcard").scrollIntoView({behavior:"smooth"});
+}
+function openCalEdit(id){var ev=CAL.filter(function(x){return x.id===id;})[0];if(ev)openCalForm(ev);}
+function calDone(msg){$("cformcard").hidden=true;$("addmsg").textContent=msg;fetchCal();}
+function calFail(d){alert("失敗した: "+((d&&d.error&&d.error.message)||"連携状態を確認して"));}
+$("addopen").onclick=function(){
+  if(!gcalConnected()){alert("先にGoogleカレンダーと連携して");return;}
+  openCalForm(null);
+};
+$("ccancel").onclick=function(){$("cformcard").hidden=true;};
+$("csave").onclick=function(){ if(!gcalConnected()){alert("先にGoogleカレンダーと連携して");return;} editingEv?calEditSave():calAddSave(); };
+function calAddSave(){
+  var o=rd("c"),err=validate(o,!o.all,"開始と終了の時刻を入れるか、「終日」にチェックして");
+  if(err){alert(err);return;}
+  var ds=[],d1=o.d1,m=o.m;
+  if(m==="weekly"){
+    ds=o.wk.length?o.wk:[wd(d1)];
+    var k=0;while(k<7&&ds.indexOf(wd(addDays(d1,k)))<0)k++;
+    d1=addDays(d1,k);
+  }
+  var last=(m==="span")?o.d2:d1, ev={summary:o.title,description:o.det};
+  if(o.all){ev.start={date:d1};ev.end={date:addDays(last,1)};}
+  else{
+    var ed=last;if(m!=="span"&&o.t2<=o.t1) ed=addDays(d1,1);
+    if(m==="span"&&(ed+"T"+o.t2)<=(d1+"T"+o.t1)){alert("終了が開始より前になってる");return;}
+    ev.start={dateTime:d1+"T"+o.t1+":00",timeZone:TZ};ev.end={dateTime:ed+"T"+o.t2+":00",timeZone:TZ};
+  }
+  if(m==="daily"||m==="weekly"||m==="monthly"){
+    var r="RRULE:FREQ="+{daily:"DAILY",weekly:"WEEKLY",monthly:"MONTHLY"}[m];
+    if(m==="weekly") r+=";BYDAY="+ds.map(function(x){return CODES[x];}).join(",");
+    if(m==="monthly") r+=";BYMONTHDAY="+(+d1.split("-")[2]);
+    if(o.d2) r+=";UNTIL="+(o.all?o.d2.replace(/-/g,""):new Date(o.d2+"T23:59:59").toISOString().replace(/[-:]/g,"").split(".")[0]+"Z");
+    ev.recurrence=[r];
+  }
+  $("csave").disabled=true;
+  gapi(EVURL,{method:"POST",body:JSON.stringify(ev)}).then(function(d){
+    $("csave").disabled=false;
+    if(d&&d.id) calDone("カレンダーに追加した"); else calFail(d);
+  }).catch(function(){$("csave").disabled=false;alert("追加に失敗した(通信エラー)");});
+}
+function calEditSave(){
+  var ev=editingEv,o=rd("c");
+  if(!o.title||!o.d1){alert("タイトルと開始日は必須");return;}
+  if(!o.all&&(!o.t1||!o.t2)){alert("開始と終了の時刻を入れるか、「終日」にチェックして");return;}
+  var endD=o.d2||o.d1;if(endD<o.d1){alert("終了日が開始日より前になってる");return;}
+  var body={summary:o.title,description:o.det},id=ev.id;
+  if(ev.rid&&$("cscope").value==="all") id=ev.rid;
+  else if(o.all){body.start={date:o.d1,dateTime:null};body.end={date:addDays(endD,1),dateTime:null};}
+  else{
+    var e2=endD;if(!o.d2&&o.t2<=o.t1) e2=addDays(o.d1,1);
+    if((e2+"T"+o.t2)<=(o.d1+"T"+o.t1)){alert("終了が開始より前になってる");return;}
+    body.start={dateTime:o.d1+"T"+o.t1+":00",timeZone:TZ,date:null};body.end={dateTime:e2+"T"+o.t2+":00",timeZone:TZ,date:null};
+  }
+  $("csave").disabled=true;
+  gapi(EVURL+"/"+encodeURIComponent(id),{method:"PATCH",body:JSON.stringify(body)}).then(function(d){
+    $("csave").disabled=false;
+    if(d&&d.id) calDone("変更を保存した"); else calFail(d);
+  }).catch(function(){$("csave").disabled=false;alert("保存に失敗した(通信エラー)");});
+}
+function calDelete(id,msg){
+  if(!confirm(msg))return;
+  gapi(EVURL+"/"+encodeURIComponent(id),{method:"DELETE"}).then(function(d){
+    if(d&&!d.error) calDone("削除した"); else calFail(d);
+  }).catch(function(){alert("削除に失敗した(通信エラー)");});
+}
+$("cdel1").onclick=function(){ if(editingEv) calDelete(editingEv.id,editingEv.rid?"この回だけ削除する?":"この予定を削除する?"); };
+$("cdelall").onclick=function(){ if(editingEv) calDelete(editingEv.rid,"くり返しの予定を全部削除する?(過去分も消える)"); };
+$("listRange").onchange=function(){RANGE=+$("listRange").value;fetchCal();};
+$("gcalbtn").onclick=function(){
+  if(!tokenClient){alert("読み込み中。少し待ってもう一度押して");return;}
+  tokenClient.requestAccessToken({prompt: gcalConnected()?"":"consent"});
+};
+
+// ===== AI用リザルト =====
 function buildText(){
-  var d0=day0(),now=Date.now(),d=new Date();
+  var d0=day0(),now=Date.now(),d=new Date(),L=TT();
   var todays=log.filter(function(x){return (x.e===null?now:x.e)>=d0;});
   function actual(name){var s=0;todays.forEach(function(x){if(x.n===name){s+=(x.e===null?now:x.e)-Math.max(x.s,d0);}});return s;}
-  var L=[];
-  L.push("以下は今日の工程管理の記録です。予定と実績を比べて、今日の生活を評価してください。良かった点、改善点、明日に向けた一言をお願いします。");
-  L.push("");
-  L.push("【集計時点】"+(d.getMonth()+1)+"/"+d.getDate()+" "+fmt(now));
-  L.push("");
-  L.push("【予定ごとの結果】");
-  TASKS.forEach(function(t){
-    if(isSkipped(t[0])){L.push("・"+t[0]+"("+t[1]+"〜"+t[2]+"): 今日はスキップ(キャンセル)");return;}
+  var T=[];
+  T.push("以下は今日の工程管理の記録です。予定と実績を比べて、今日の生活を評価してください。良かった点、改善点、明日に向けた一言をお願いします。");
+  T.push("");T.push("【集計時点】"+(d.getMonth()+1)+"/"+d.getDate()+" "+fmt(now));
+  T.push("");T.push("【ツールタスクごとの結果】");
+  L.forEach(function(t){
+    if(isSkipped(t[0])){T.push("・"+t[0]+"("+t[1]+"〜"+t[2]+"): 今日はスキップ");return;}
     var a=actual(t[0]),pm=plen(t),am=a/60000;
     var first=null;todays.forEach(function(x){if(x.n===t[0]&&x.s>=d0&&!first) first=x;});
     var st=am>=pm*0.8?"達成":(am>0?"途中":"未実施");
     var line="・"+t[0]+"("+t[1]+"〜"+t[2]+"): "+st+" / 実績"+dur(a)+" / 予定"+dur(pm*60000);
-    if(first){
-      var g=(new Date(first.s).getHours()*60+new Date(first.s).getMinutes())-tm(t[1]);
-      if(g>720)g-=1440;if(g<-720)g+=1440;
-      line+=" / 開始"+(g===0?"予定通り":(g>0?g+"分遅れ":(-g)+"分早い"));
-    }
-    L.push(line);
+    if(first){var g=(new Date(first.s).getHours()*60+new Date(first.s).getMinutes())-tm(t[1]);
+      if(g>720)g-=1440;if(g<-720)g+=1440;line+=" / 開始"+(g===0?"予定通り":(g>0?g+"分遅れ":(-g)+"分早い"));}
+    T.push(line);
   });
+  if(!L.length) T.push("きょうのツールタスクなし");
+  var cal=todays.filter(function(x){return x.p==="cal";});
+  if(cal.length){T.push("");T.push("【カレンダー予定として実行したもの】");cal.forEach(function(x){T.push("・"+x.n+" "+fmt(x.s)+"〜"+(x.e===null?"実行中":fmt(x.e))+" ("+dur((x.e===null?now:x.e)-x.s)+")");});}
   var extra=todays.filter(function(x){return !x.p;});
-  L.push("");
-  L.push("【割り込み(予定外)】");
-  if(!extra.length){L.push("なし");}
-  extra.forEach(function(x){L.push("・"+x.n+" "+fmt(x.s)+"〜"+(x.e===null?"実行中":fmt(x.e))+" ("+dur((x.e===null?now:x.e)-x.s)+")");});
-  L.push("");
-  L.push("【今日のログ(時系列)】");
-  if(!todays.length){L.push("まだ記録なし");}
-  todays.forEach(function(x){L.push(fmt(x.s)+"〜"+(x.e===null?"実行中":fmt(x.e))+" "+x.n+(x.p?"":"(割り込み)"));});
-  return L.join("\n");
+  T.push("");T.push("【割り込み(予定外)】");
+  if(!extra.length){T.push("なし");}
+  extra.forEach(function(x){T.push("・"+x.n+" "+fmt(x.s)+"〜"+(x.e===null?"実行中":fmt(x.e))+" ("+dur((x.e===null?now:x.e)-x.s)+")");});
+  T.push("");T.push("【今日のログ(時系列)】");
+  if(!todays.length){T.push("まだ記録なし");}
+  todays.forEach(function(x){T.push(fmt(x.s)+"〜"+(x.e===null?"実行中":fmt(x.e))+" "+x.n+(x.p===true?"":x.p==="cal"?"(カレンダー)":"(割り込み)"));});
+  return T.join("\n");
 }
 function copyText(txt){
   function fallback(){
     try{var ta=$("copyarea");ta.hidden=false;ta.value=txt;ta.focus();ta.select();ta.setSelectionRange(0,txt.length);var ok=document.execCommand("copy");if(ok)ta.hidden=true;return ok;}catch(e){return false;}
   }
   return new Promise(function(res){
-    try{
-      if(navigator.clipboard&&navigator.clipboard.writeText){
-        navigator.clipboard.writeText(txt).then(function(){res(true);},function(){res(fallback());});
-        return;
-      }
-    }catch(e){}
+    try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(function(){res(true);},function(){res(fallback());}); return; } }catch(e){}
     res(fallback());
   });
 }
@@ -576,85 +771,27 @@ $("copybtn").onclick=function(){
     if(!ok){var ta=$("copyarea");ta.hidden=false;ta.value=t;}
   });
 };
-$("addDate").value=todayStr().split("-").map(function(x,i){return i>0&&x.length<2?"0"+x:x;}).join("-");
-function ymd(d){return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2);}
-function addDays(x,n){var d=new Date(x+"T12:00:00");d.setDate(d.getDate()+n);return ymd(d);}
-var TZ=(Intl.DateTimeFormat().resolvedOptions().timeZone)||"Asia/Tokyo", CODES=["SU","MO","TU","WE","TH","FR","SA"];
-function untilStr(d2,all){return all?d2.replace(/-/g,""):new Date(d2+"T23:59:59").toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";}
-function updateMode(){
-  var m=$("addMode").value;
-  $("d2wrap").hidden=(m==="once");
-  $("d2label").textContent=m==="span"?"終了日":m==="daily"?"最終日":"終了日(空欄でずっと)";
-  $("wkrow").hidden=(m!=="weekly");
-  $("mnote").hidden=(m!=="monthly");
-  $("timerow").hidden=$("addAll").checked;
-  if(m==="monthly"){var d=$("addDate").value;$("mnote").textContent=d?"毎月"+(+d.split("-")[2])+"日にくり返す(その日がない月は飛ぶ)":"開始日を入れると、その日にちで毎月くり返す";}
-}
-["addMode","addAll","addDate"].forEach(function(id){$(id).addEventListener("change",updateMode);});
-$("addopen").onclick=function(){$("addform").hidden=false;$("addmsg").textContent="";updateMode();$("addform").scrollIntoView({behavior:"smooth"});};
-$("addcancel").onclick=function(){$("addform").hidden=true;};
-$("addbtn").onclick=function(){
-  if(!gcalConnected()){alert("先にGoogleカレンダーと連携して");return;}
-  var m=$("addMode").value,d1=$("addDate").value,d2=$("addDate2").value,t1=$("addStart").value,t2=$("addEnd").value,all=$("addAll").checked;
-  var title=$("addTitle").value.trim(),det=$("addDetail").value.trim();
-  if(!title||!d1){alert("タイトルと開始日は必須");return;}
-  if(!all&&(!t1||!t2)){alert("開始と終了の時刻を入れるか、「終日」にチェックして");return;}
-  if((m==="span"||m==="daily")&&!d2){alert("終了日を入れて");return;}
-  if(m!=="once"&&d2&&d2<d1){alert("終了日が開始日より前になってる");return;}
-  var ds=[];
-  if(m==="weekly"){
-    ds=[].slice.call(document.querySelectorAll("#wkrow input:checked")).map(function(x){return x.value;});
-    if(!ds.length) ds=[CODES[new Date(d1+"T12:00:00").getDay()]];
-    var k=0;while(k<7&&ds.indexOf(CODES[new Date(addDays(d1,k)+"T12:00:00").getDay()])<0)k++;
-    d1=addDays(d1,k);
-  }
-  var last=(m==="span")?d2:d1, ev={summary:title,description:det};
-  if(all){ev.start={date:d1};ev.end={date:addDays(last,1)};}
-  else{
-    var ed=last;if(m!=="span"&&t2<=t1) ed=addDays(d1,1);
-    if(m==="span"&&(ed+"T"+t2)<=(d1+"T"+t1)){alert("終了が開始より前になってる");return;}
-    ev.start={dateTime:d1+"T"+t1+":00",timeZone:TZ};ev.end={dateTime:ed+"T"+t2+":00",timeZone:TZ};
-  }
-  if(m==="daily"||m==="weekly"||m==="monthly"){
-    var r="RRULE:FREQ="+{daily:"DAILY",weekly:"WEEKLY",monthly:"MONTHLY"}[m];
-    if(m==="weekly") r+=";BYDAY="+ds.join(",");
-    if(m==="monthly") r+=";BYMONTHDAY="+(+d1.split("-")[2]);
-    if(d2) r+=";UNTIL="+untilStr(d2,all);
-    ev.recurrence=[r];
-  }
-  $("addbtn").disabled=true;
-  gapi(EVURL,{method:"POST",body:JSON.stringify(ev)}).then(function(d){
-    $("addbtn").disabled=false;
-    if(d&&d.id){
-      $("addTitle").value="";$("addDetail").value="";$("addStart").value="";$("addEnd").value="";$("addDate2").value="";
-      $("addform").hidden=true;$("addmsg").textContent="カレンダーに追加した";fetchGcalToday();
-    }else{alert("追加に失敗した: "+((d&&d.error&&d.error.message)||"連携状態を確認して"));}
-  }).catch(function(){$("addbtn").disabled=false;alert("追加に失敗した(通信エラー)");});
-};
 $("adbtn").onclick=function(){var v=$("ad").value.trim();if(!v)return;$("ad").value="";start(v,false);};
 $("ad").addEventListener("keydown",function(e){if(e.key==="Enter")$("adbtn").click();});
-var PANES=["home","main","cal","rec"];
-function showPane(n){
-  PANES.forEach(function(p){$("p-"+p).hidden=(p!==n);$("n-"+p).classList.toggle("on",p===n);});
-  if(n==="main"){draft=JSON.parse(JSON.stringify(TASKS));renderEdit();$("savemsg").textContent="";}
-  window.scrollTo(0,0);
-}
-PANES.forEach(function(p){$("n-"+p).onclick=function(){showPane(p);};});
 $("reset").onclick=function(){
   if(!confirm("今日の記録を消す?")) return;
   var d0=day0();log=log.filter(function(x){return (x.e===null?Date.now():x.e)<d0;});save();render();
 };
 $("resetall").onclick=function(){
-  if(!confirm("全データを削除する?この端末の予定・記録・Google連携の情報が消える(Google側のバックアップは残る)。元に戻せません")) return;
-  try{localStorage.removeItem(KEY);localStorage.removeItem(TKEY);localStorage.removeItem(SKKEY);localStorage.removeItem(GTOKKEY);localStorage.removeItem(TSKEY);}catch(e){}
+  if(!confirm("この端末のデータを削除する?ツールタスク・記録・Google連携の情報が消える。Googleに保存済みのバックアップは残り、次に連携すると復元される。")) return;
+  try{[KEY,TKEY1,TKEY2,TSKEY,SKKEY,GTOKKEY].forEach(function(k){localStorage.removeItem(k);});}catch(e){}
   location.reload();
 };
-$("gcalbtn").onclick=function(){
-  if(!tokenClient){alert("読み込み中。少し待ってもう一度押して");return;}
-  tokenClient.requestAccessToken({prompt: gcalConnected()?"":"consent"});
-};
+var PANES=["home","tool","cal","rec"];
+function showPane(n){
+  PANES.forEach(function(p){$("p-"+p).hidden=(p!==n);$("n-"+p).classList.toggle("on",p===n);});
+  if(n==="tool")renderToolList();
+  if(n==="cal"){renderCalList();fetchCal();}
+  window.scrollTo(0,0);
+}
+PANES.forEach(function(p){$("n-"+p).onclick=function(){showPane(p);};});
 window.addEventListener("load",initGcal);
-render();
+render();renderToolList();
 setInterval(render,20000);
 </script>
 </body>
