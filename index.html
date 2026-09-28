@@ -233,6 +233,9 @@ try{
   else{ var t1=localStorage.getItem(TKEY1); if(t1){ TASKS=normalize(JSON.parse(t1)); saveTasksLocal(); } }
 }catch(e){}
 try{ var sk0=JSON.parse(localStorage.getItem(SKKEY)); if(sk0&&sk0.d===todayStr()){SKIP=sk0.n||[];} }catch(e){}
+var DKEY="kotei_alldone_v1", DONEDAY="";
+try{ DONEDAY=localStorage.getItem(DKEY)||""; }catch(e){}
+function setDone(v){ DONEDAY=v; try{ localStorage.setItem(DKEY,v); }catch(e){} }
 var PKEY="kotei_paused_v1", PAUSED=[];
 try{ PAUSED=(JSON.parse(localStorage.getItem(PKEY))||[]).filter(function(x){return x.at>=day0();}); }catch(e){}
 function savePaused(){ try{ localStorage.setItem(PKEY,JSON.stringify(PAUSED)); }catch(e){} }
@@ -476,6 +479,7 @@ function start(name,planned,detail,cev){
   if(r&&r.n===name) return;
   if(r&&planned===false) addPaused(r);
   stopRun();
+  if(DONEDAY) setDone("");
   dropPaused(name);
   var det=detail!=null?detail:(function(){var pt=TT().filter(function(t){return t[0]===name;})[0];return pt&&pt[3]?pt[3]:"";})();
   var again=cev&&log.some(function(x){return x.ex&&x.gid===cev.id;});
@@ -491,14 +495,14 @@ function nextInOrder(name){
   var idx=-1;for(var i=0;i<L.length;i++) if(L[i][0]===name){idx=i;break;}
   if(!L.length) return null;
   if(idx<0){ var n=nowMin();for(var j=0;j<L.length;j++) if(tm(L[j][1])>=n) return L[j]; return null; }
-  return L[(idx+1)%L.length].n===name?null:L[(idx+1)%L.length];
+  return idx+1<L.length?L[idx+1]:null;
 }
 function endAndAdvance(){
   var r=running();if(!r) return;
   var pz=(r.p===false)?lastPaused(r.n):null;
   if(pz){ resume(pz); return; }
   var nx=nextInOrder(r.n);
-  if(nx) start(nx[0],true); else{stopRun();save();render();}
+  if(nx) start(nx[0],true); else{stopRun();setDone(todayStr());save();render();}
 }
 
 // ===== 画面描画 =====
@@ -520,6 +524,13 @@ function render(){
     var pz0=(r.p===false)?lastPaused(r.n):null;
     btn.textContent=pz0?"「"+r.n+"」を終了して「"+pz0.n+"」に戻る":"「"+r.n+"」を終了して次へ";
     btn.onclick=endAndAdvance;
+  }else if(sg.t&&DONEDAY===todayStr()){
+    $("nowlabel").textContent="ツールタスク";
+    $("nowname").textContent="全タスク完了";
+    $("nowmeta").textContent="きょうのツールタスクはすべて終わった。おつかれさま";
+    $("nowdetail").textContent="";
+    btn.textContent="もう一度はじめから";
+    btn.onclick=function(){setDone("");render();};
   }else if(!sg.t){
     $("nowlabel").textContent="ツールタスク";
     $("nowname").textContent=TASKS.length?"きょうの分はなし":"まだ登録がない";
