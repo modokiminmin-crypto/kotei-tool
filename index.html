@@ -100,6 +100,11 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
       <button class="ghost" id="stopbtn" style="width:100%;margin-top:10px;padding:14px" hidden>中断する</button>
     </section>
 
+    <section class="card" id="pausedcard" hidden>
+      <h2>中断中のタスク(タップで詳細)</h2>
+      <ul class="list" id="pausedlist"></ul>
+    </section>
+
     <section class="card">
       <h2>予定にないこと(割り込み)を記録</h2>
       <div class="row">
@@ -228,6 +233,12 @@ try{
   else{ var t1=localStorage.getItem(TKEY1); if(t1){ TASKS=normalize(JSON.parse(t1)); saveTasksLocal(); } }
 }catch(e){}
 try{ var sk0=JSON.parse(localStorage.getItem(SKKEY)); if(sk0&&sk0.d===todayStr()){SKIP=sk0.n||[];} }catch(e){}
+var PKEY="kotei_paused_v1", PAUSED=[];
+try{ PAUSED=(JSON.parse(localStorage.getItem(PKEY))||[]).filter(function(x){return x.at>=day0();}); }catch(e){}
+function savePaused(){ try{ localStorage.setItem(PKEY,JSON.stringify(PAUSED)); }catch(e){} }
+function addPaused(r){ PAUSED=PAUSED.filter(function(x){return x.n!==r.n;}); PAUSED.push({n:r.n,p:r.p,dt:r.dt||"",at:Date.now()}); savePaused(); }
+function dropPaused(name){ PAUSED=PAUSED.filter(function(x){return x.n!==name;}); savePaused(); }
+function lastPaused(except){ for(var i=PAUSED.length-1;i>=0;i--) if(PAUSED[i].n!==except) return PAUSED[i]; return null; }
 function save(){ try{ localStorage.setItem(KEY,JSON.stringify(log)); }catch(e){} }
 function saveSkip(){ try{ localStorage.setItem(SKKEY,JSON.stringify({d:SKDAY,n:SKIP})); }catch(e){} }
 function saveTasksLocal(){ try{ localStorage.setItem(TKEY2,JSON.stringify(TASKS)); }catch(e){} }
@@ -372,18 +383,27 @@ function initGcal(){
 function gcalCreate(entry,detail){
   if(!gcalConnected()) return;
   gapi(EVURL,{method:"POST",body:JSON.stringify({summary:entry.n,description:detail||"",start:{dateTime:new Date(entry.s).toISOString()},end:{dateTime:new Date(entry.s+60000).toISOString()},extendedProperties:{"private":{koteiLog:"1"}}})})
-    .then(function(d){ if(d&&d.id){entry.gid=d.id; save();} }).catch(function(){});
+    .then(function(d){ if(d&&d.id){entry.gid=d.id; save(); if(entry.e) gcalPatchEnd(entry);} }).catch(function(){});
 }
 function gcalPatchEnd(entry){
   if(!gcalConnected()||!entry.gid) return;
-  gapi(EVURL+"/"+entry.gid,{method:"PATCH",body:JSON.stringify({end:{dateTime:new Date(entry.e).toISOString()}})}).catch(function(){});
+  gapi(EVURL+"/"+encodeURIComponent(entry.gid),{method:"PATCH",body:JSON.stringify({end:{dateTime:new Date(Math.max(entry.e,entry.s+1000)).toISOString(),date:null}})})
+    .then(function(){ if(entry.ex) fetchCal(); }).catch(function(){});
+}
+// すでにあるカレンダー予定を「開始」したら、新規作成せずその予定の時刻を直接書き換える
+function gcalAdopt(entry,cev){
+  entry.gid=cev.id; entry.ex=true; save();
+  if(!gcalConnected()) return;
+  var end=(cev.e0&&cev.e0>entry.s+60000)?cev.e0:entry.s+60000;
+  gapi(EVURL+"/"+encodeURIComponent(cev.id),{method:"PATCH",body:JSON.stringify({start:{dateTime:new Date(entry.s).toISOString(),date:null},end:{dateTime:new Date(end).toISOString(),date:null}})})
+    .then(function(){fetchCal();}).catch(function(){});
 }
 var CAL=[], HOL={}, holFail=false, RANGE=14;
 function norm(ev){
   var all=!!ev.start.date&&!ev.start.dateTime, s=ev.start.dateTime?new Date(ev.start.dateTime):null, e=(ev.end&&ev.end.dateTime)?new Date(ev.end.dateTime):null;
   var sd=all?ev.start.date:ymd(s), ed=all?((ev.end&&ev.end.date)?addDays(ev.end.date,-1):sd):(e?ymd(e):sd);
   if(ed<sd) ed=sd;
-  return {id:ev.id,rid:ev.recurringEventId||"",name:ev.summary||"(無題)",detail:ev.description||"",all:all,sd:sd,ed:ed,st:s?fmt(s.getTime()):"",et:e?fmt(e.getTime()):""};
+  return {id:ev.id,rid:ev.recurringEventId||"",name:ev.summary||"(無題)",detail:ev.description||"",all:all,sd:sd,ed:ed,st:s?fmt(s.getTime()):"",et:e?fmt(e.getTime()):"",s0:s?s.getTime():0,e0:e?e.getTime():0};
 }
 function fetchCal(){
   if(!gcalConnected()){ if(gToken) refreshNow(); CAL=[]; updateGcalStatus(); renderTasks(running()); renderCalList(); return; }
@@ -391,7 +411,7 @@ function fetchCal(){
   var d1=new Date(d0.getTime()+RANGE*86400000);
   var q="?timeMin="+encodeURIComponent(d0.toISOString())+"&timeMax="+encodeURIComponent(d1.toISOString())+"&singleEvents=true&orderBy=startTime&maxResults=250";
   gapi(EVURL+q).then(function(d){
-    var mine=log.filter(function(x){return x.gid;}).map(function(x){return x.gid;});
+    var mine=log.filter(function(x){return x.gid&&!x.ex;}).map(function(x){return x.gid;});
     CAL=(d.items||[]).filter(function(ev){
       var xp=ev.extendedProperties&&ev.extendedProperties["private"];
       return ev.start && ev.status!=="cancelled" && mine.indexOf(ev.id)<0 && !(xp&&(xp.koteiData||xp.koteiLog));
@@ -451,17 +471,21 @@ function suggested(){
   return {t:best,now:false,in:bd};
 }
 function stopRun(){var r=running();if(r){ r.e=Date.now(); gcalPatchEnd(r); }}
-function start(name,planned,detail){
+function start(name,planned,detail,cev){
   var r=running();
   if(r&&r.n===name) return;
+  if(r&&planned===false) addPaused(r);
   stopRun();
+  dropPaused(name);
   var det=detail!=null?detail:(function(){var pt=TT().filter(function(t){return t[0]===name;})[0];return pt&&pt[3]?pt[3]:"";})();
+  var again=cev&&log.some(function(x){return x.ex&&x.gid===cev.id;});
   var entry={n:name,s:Date.now(),e:null,p:planned,dt:det};
   log.push(entry);
   save(); render();
-  gcalCreate(entry,det);
+  if(cev&&!cev.all&&!again) gcalAdopt(entry,cev); else gcalCreate(entry,det);
 }
-function stopAll(){stopRun();save();render();}
+function stopAll(){var r=running();if(r) addPaused(r);stopRun();save();render();}
+function resume(pz){start(pz.n,pz.p,pz.dt);}
 function nextInOrder(name){
   var L=TT().filter(function(t){return !isSkipped(t[0]);});
   var idx=-1;for(var i=0;i<L.length;i++) if(L[i][0]===name){idx=i;break;}
@@ -471,8 +495,10 @@ function nextInOrder(name){
 }
 function endAndAdvance(){
   var r=running();if(!r) return;
+  var pz=(r.p===false)?lastPaused(r.n):null;
+  if(pz){ resume(pz); return; }
   var nx=nextInOrder(r.n);
-  if(nx) start(nx[0],true); else stopAll();
+  if(nx) start(nx[0],true); else{stopRun();save();render();}
 }
 
 // ===== 画面描画 =====
@@ -491,7 +517,8 @@ function render(){
     if(pt){ meta+=" / 予定 "+pt[1]+"〜"+pt[2]; $("herobarwrap").hidden=false; $("herobar").style.width=Math.min(100,Math.round((Date.now()-r.s)/60000/plen(pt)*100))+"%"; }
     $("nowmeta").textContent=meta;
     $("nowdetail").textContent=(pt&&pt[3])?pt[3]:(r.dt||"");
-    btn.textContent="「"+r.n+"」を終了して次へ";
+    var pz0=(r.p===false)?lastPaused(r.n):null;
+    btn.textContent=pz0?"「"+r.n+"」を終了して「"+pz0.n+"」に戻る":"「"+r.n+"」を終了して次へ";
     btn.onclick=endAndAdvance;
   }else if(!sg.t){
     $("nowlabel").textContent="ツールタスク";
@@ -508,7 +535,7 @@ function render(){
     $("nowdetail").textContent=sg.t[3]||"";
     btn.onclick=function(){start(sg.t[0],true);};
   }
-  renderTasks(r); renderRes();
+  renderTasks(r); renderPaused(); renderRes();
 }
 function mkItem(o){
   var li=document.createElement("li");li.className="it";
@@ -521,6 +548,14 @@ function mkItem(o){
   li.appendChild(t);li.appendChild(bd);
   if(o.btns){var a=document.createElement("div");a.className="act";o.btns.forEach(function(b){var x=document.createElement("button");x.className="ghost sm"+(b.cls?" "+b.cls:"");x.textContent=b.t;x.onclick=b.f;a.appendChild(x);});li.appendChild(a);}
   return li;
+}
+function renderPaused(){
+  PAUSED=PAUSED.filter(function(x){return x.at>=day0();});
+  var c=$("pausedcard"),ul=$("pausedlist");c.hidden=!PAUSED.length;ul.innerHTML="";
+  PAUSED.slice().reverse().forEach(function(p){
+    ul.appendChild(mkItem({t1:"中断",t2:fmt(p.at),name:p.n,sub:p.p===false?"割り込み":"",detail:p.dt,
+      btns:[{t:"再開",f:function(){resume(p);}},{t:"やめる",f:function(){dropPaused(p.n);renderPaused();}}]}));
+  });
 }
 function todayCal(){var t=todayStr();return CAL.filter(function(x){return x.sd<=t&&x.ed>=t;});}
 function renderTasks(r){
@@ -539,7 +574,7 @@ function renderTasks(r){
   tc.forEach(function(ev){
     var isCur=r&&r.n===ev.name;
     gl.appendChild(mkItem({t1:ev.all?"終日":ev.st,t2:ev.all?"":ev.et,name:ev.name,badge:ev.rid?" <span class='tag'>くり返し</span>":"",detail:ev.detail,cur:isCur,
-      btns:[{t:isCur?"実行中":"開始",f:function(){start(ev.name,"cal",ev.detail);}}]}));
+      btns:[{t:isCur?"実行中":"開始",f:function(){start(ev.name,"cal",ev.detail,ev);}}]}));
   });
   var h=$("holnote"),hn=HOL[todayStr()];h.hidden=!hn;if(hn)h.textContent="今日は祝日: "+hn;
 }
@@ -775,11 +810,11 @@ $("adbtn").onclick=function(){var v=$("ad").value.trim();if(!v)return;$("ad").va
 $("ad").addEventListener("keydown",function(e){if(e.key==="Enter")$("adbtn").click();});
 $("reset").onclick=function(){
   if(!confirm("今日の記録を消す?")) return;
-  var d0=day0();log=log.filter(function(x){return (x.e===null?Date.now():x.e)<d0;});save();render();
+  var d0=day0();log=log.filter(function(x){return (x.e===null?Date.now():x.e)<d0;});save();PAUSED=[];savePaused();render();
 };
 $("resetall").onclick=function(){
   if(!confirm("この端末のデータを削除する?ツールタスク・記録・Google連携の情報が消える。Googleに保存済みのバックアップは残り、次に連携すると復元される。")) return;
-  try{[KEY,TKEY1,TKEY2,TSKEY,SKKEY,GTOKKEY].forEach(function(k){localStorage.removeItem(k);});}catch(e){}
+  try{[KEY,TKEY1,TKEY2,TSKEY,SKKEY,GTOKKEY,PKEY].forEach(function(k){localStorage.removeItem(k);});}catch(e){}
   location.reload();
 };
 var PANES=["home","tool","cal","rec"];
