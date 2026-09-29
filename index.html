@@ -197,7 +197,12 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
             <li>「デプロイ」→「新しいデプロイ」→ 左上の<b>歯車</b>から「ウェブアプリ」。実行するユーザーは<b>自分</b>、アクセスできるユーザーは<b>全員</b>にしてデプロイ</li>
             <li>出てきたURLを下に貼り付けて「保存して接続する」</li>
           </ol>
-          <div class="meta"><b>ほかの端末・ホーム画面:</b> 「他の端末用のリンクをコピー」を、その端末のSafariで開く。ホーム画面に追加するときは、<b>そのリンクを開いたまま</b>追加する(追加済みなら消して入れ直すか、下の欄にリンクを貼る)。iPhoneでは、Safariとホーム画面のアプリはデータが別なので、それぞれで必要。</div>
+          <div class="meta"><b>ほかの端末・ホーム画面(かんたんな方法):</b>
+            <br>1. 普通にホーム画面に追加する
+            <br>2. 「他の端末用のリンクをコピー」で作ったリンクを、その端末にコピーしておく
+            <br>3. ホーム画面のアプリを開き、「カレンダー」タブの常時連携で「クリップボードから取り込む」を押す
+            <br>iPhoneでは、Safariとホーム画面のアプリはデータが別なので、それぞれで1回必要。</div>
+          <div class="meta" style="margin-top:8px"><b>うまくいかないとき:</b> Safariを機内モードにしてリンクを開く(表示はされないが問題ない)→ホーム画面に追加→機内モードを解除。iPhoneがホーム画面に登録するURLの都合で、通信できる状態だと設定が消えることがあるため。</div>
         </details>
         <div id="pxsetup">
           <div class="row"><button class="ghost" id="pxcopy">コードをコピー</button></div>
@@ -206,6 +211,7 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
           <input type="text" id="pxurl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" autocapitalize="off">
           <div class="row"><button class="big" id="pxsave" style="margin:0;padding:13px;flex:1">保存して接続する</button></div>
           <label class="fl" for="pximp">他の端末で作ったリンクがある場合</label>
+          <div class="row"><button class="big" id="pxclip" style="margin:0;padding:13px;flex:1">クリップボードから取り込む</button></div>
           <input type="text" id="pximp" placeholder="リンクを貼り付け" autocomplete="off" autocapitalize="off">
           <div class="row"><button class="ghost" id="pximpbtn">リンクから取り込む</button></div>
         </div>
@@ -265,7 +271,7 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
 
 <script>
 // バージョン(更新するたびに数字を1つ上げる)
-var VERSION="1.04";
+var VERSION="1.05";
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function p2(n){return ("0"+n).slice(-2);}
@@ -983,6 +989,11 @@ $("pxoff").onclick=function(){
   location.reload();
 };
 $("pxtest").onclick=pxTest;
+$("pxclip").onclick=function(){
+  if(!navigator.clipboard||!navigator.clipboard.readText){ pxMsg("この端末では自動で貼り付けできない。下の欄に貼り付けて",false); return; }
+  navigator.clipboard.readText().then(function(t){ $("pximp").value=t; $("pximpbtn").click(); })
+    .catch(function(){ pxMsg("貼り付けできなかった。下の欄を長押しして貼り付けて",false); });
+};
 $("pximpbtn").onclick=function(){
   var v=$("pximp").value.trim(), i=v.indexOf("#proxy=");
   if(i<0){ pxMsg("リンクの形が違う(#proxy= を含むもの)",false); return; }
