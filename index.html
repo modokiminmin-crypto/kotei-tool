@@ -183,23 +183,34 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
     <section class="card px">
       <details id="pxdet">
         <summary><span>常時連携(Apps Script)</span><span class="pill" id="pxpill">未設定</span></summary>
-        <div id="pxsetup">
-          <div class="meta" style="margin-top:8px">Googleの無料機能を「窓口」にして、ログインの期限切れをなくす設定。最初に1回だけ、パソコンでやるのがおすすめ。</div>
+        <div class="meta" style="margin-top:8px">
+          <b>常時連携をおすすめする理由:</b> Googleのログインは1時間で切れるが、常時連携なら切れない。開くだけで自動で同期され、赤いバナーも出ない。<br>
+          <b>しなくても使える:</b> 都度連携でも予定は同期される。切れている間の今日の記録は、次に連携したときに自動で反映される。
+        </div>
+        <details style="margin-top:10px"><summary style="font-size:14px">設定の手順を見る</summary>
+          <div class="meta" style="margin-top:6px">つなぎたいカレンダーのGoogleアカウントで、パソコンでやるのがおすすめ。</div>
           <ol>
-            <li>このツール用のGoogleアカウントで <b>script.google.com</b> を開き、「新しいプロジェクト」を作る</li>
-            <li>最初から入っているコードを全部消して、下の「コードをコピー」で貼り付け、<b>上の保存ボタン(フロッピーのマーク)を押す</b></li>
-            <li>保存すると関数が選べるようになるので、上の関数選択で <b>_scope</b> を選び「実行」。許可の画面が出たら進める(「安全でないページに移動」と出ても、自分のコードなので大丈夫)</li>
-            <li>右上「デプロイ」→「新しいデプロイ」→ 左上の<b>歯車マーク</b>から「ウェブアプリ」を選ぶ。<b>次のユーザーとして実行: 自分</b>、<b>アクセスできるユーザー: 全員</b> にしてデプロイ</li>
-            <li>出てきた「ウェブアプリのURL」をコピーして、下に貼り付ける</li>
+            <li>そのアカウントで <b>script.google.com</b> を開き、「新しいプロジェクト」を作る</li>
+            <li>最初のコードを全部消し、下の「コードをコピー」で貼り付け、<b>保存ボタン(フロッピーのマーク)</b>を押す</li>
+            <li>左の「サービス」の<b>+</b>から <b>Google Calendar API</b> を追加する</li>
+            <li>関数選択で <b>_scope</b> を選んで「実行」し、許可する(「安全でないページ」と出ても「詳細」から進める)</li>
+            <li>「デプロイ」→「新しいデプロイ」→ 左上の<b>歯車</b>から「ウェブアプリ」。実行するユーザーは<b>自分</b>、アクセスできるユーザーは<b>全員</b>にしてデプロイ</li>
+            <li>出てきたURLを下に貼り付けて「保存して接続する」</li>
           </ol>
+          <div class="meta"><b>ほかの端末・ホーム画面:</b> 「他の端末用のリンクをコピー」を、その端末のSafariで開く。ホーム画面に追加するときは、<b>そのリンクを開いたまま</b>追加する(追加済みなら消して入れ直すか、下の欄にリンクを貼る)。iPhoneでは、Safariとホーム画面のアプリはデータが別なので、それぞれで必要。</div>
+        </details>
+        <div id="pxsetup">
           <div class="row"><button class="ghost" id="pxcopy">コードをコピー</button></div>
           <textarea id="pxcode" readonly></textarea>
           <label class="fl" for="pxurl">ウェブアプリのURL</label>
           <input type="text" id="pxurl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" autocapitalize="off">
           <div class="row"><button class="big" id="pxsave" style="margin:0;padding:13px;flex:1">保存して接続する</button></div>
+          <label class="fl" for="pximp">他の端末で作ったリンクがある場合</label>
+          <input type="text" id="pximp" placeholder="リンクを貼り付け" autocomplete="off" autocapitalize="off">
+          <div class="row"><button class="ghost" id="pximpbtn">リンクから取り込む</button></div>
         </div>
         <div id="pxon" hidden>
-          <div class="meta" style="margin-top:8px">常時連携が有効。Googleのログインは使わず、期限切れもない。</div>
+          <div class="meta ok" style="margin-top:10px">常時連携が有効。</div>
           <div class="row"><button class="ghost" id="pxtest">接続テスト</button><button class="ghost" id="pxlink">他の端末用のリンクをコピー</button><button class="ghost danger" id="pxoff">解除する</button></div>
         </div>
         <div class="meta" id="pxmsg" style="margin-top:8px"></div>
@@ -254,7 +265,7 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
 
 <script>
 // バージョン(更新するたびに数字を1つ上げる)
-var VERSION="1.03";
+var VERSION="1.04";
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function p2(n){return ("0"+n).slice(-2);}
@@ -409,7 +420,6 @@ try{ PROXY=JSON.parse(localStorage.getItem(PXKEY)); if(!PROXY||!PROXY.url||!PROX
   var h=location.hash;
   if(h.indexOf("#proxy=")===0){
     try{ var o=JSON.parse(atob(decodeURIComponent(h.slice(7)))); if(o&&o.url&&o.key){ localStorage.setItem(PXKEY,JSON.stringify(o)); PROXY=o; } }catch(e){}
-    try{ history.replaceState(null,"",location.pathname+location.search); }catch(e){}
   }
 })();
 function proxyFail(){ pxFails++; if(pxFails>=2&&!proxyBad){proxyBad=true;updateGcalStatus();} }
@@ -969,9 +979,19 @@ $("pxlink").onclick=function(){
 $("pxoff").onclick=function(){
   if(!confirm("常時連携を解除する?Googleのログイン方式に戻る。")) return;
   try{localStorage.removeItem(PXKEY);localStorage.removeItem(PXDRAFT);}catch(e){}
+  try{history.replaceState(null,"",location.pathname+location.search);}catch(e){}
   location.reload();
 };
 $("pxtest").onclick=pxTest;
+$("pximpbtn").onclick=function(){
+  var v=$("pximp").value.trim(), i=v.indexOf("#proxy=");
+  if(i<0){ pxMsg("リンクの形が違う(#proxy= を含むもの)",false); return; }
+  try{
+    var o=JSON.parse(atob(decodeURIComponent(v.slice(i+7))));
+    if(!o||!o.url||!o.key) throw 1;
+    localStorage.setItem(PXKEY,JSON.stringify(o)); location.reload();
+  }catch(e){ pxMsg("リンクを読み取れなかった。最後までコピーできているか確認して",false); }
+};
 $("gbhint").onclick=function(){ showPane("cal"); $("pxdet").open=true; };
 pxRender();
 
