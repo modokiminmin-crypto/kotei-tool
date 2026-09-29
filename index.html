@@ -187,9 +187,9 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
           <div class="meta" style="margin-top:8px">Googleの無料機能を「窓口」にして、ログインの期限切れをなくす設定。最初に1回だけ、パソコンでやるのがおすすめ。</div>
           <ol>
             <li>このツール用のGoogleアカウントで <b>script.google.com</b> を開き、「新しいプロジェクト」を作る</li>
-            <li>最初から入っているコードを全部消して、下の「コードをコピー」で貼り付け、保存する</li>
-            <li>上の関数選択で <b>_scope</b> を選び「実行」。許可の画面が出たら進める(「安全でないページに移動」と出ても、自分のコードなので大丈夫)</li>
-            <li>右上「デプロイ」→「新しいデプロイ」→ 種類「ウェブアプリ」。<b>次のユーザーとして実行: 自分</b>、<b>アクセスできるユーザー: 全員</b> にしてデプロイ</li>
+            <li>最初から入っているコードを全部消して、下の「コードをコピー」で貼り付け、<b>上の保存ボタン(フロッピーのマーク)を押す</b></li>
+            <li>保存すると関数が選べるようになるので、上の関数選択で <b>_scope</b> を選び「実行」。許可の画面が出たら進める(「安全でないページに移動」と出ても、自分のコードなので大丈夫)</li>
+            <li>右上「デプロイ」→「新しいデプロイ」→ 左上の<b>歯車マーク</b>から「ウェブアプリ」を選ぶ。<b>次のユーザーとして実行: 自分</b>、<b>アクセスできるユーザー: 全員</b> にしてデプロイ</li>
             <li>出てきた「ウェブアプリのURL」をコピーして、下に貼り付ける</li>
           </ol>
           <div class="row"><button class="ghost" id="pxcopy">コードをコピー</button></div>
@@ -254,7 +254,7 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
 
 <script>
 // バージョン(更新するたびに数字を1つ上げる)
-var VERSION=2;
+var VERSION="1.03";
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function p2(n){return ("0"+n).slice(-2);}
@@ -926,6 +926,16 @@ function pxCode(k){
   ].join("\n");
 }
 function pxMsg(t,ok){var e=$("pxmsg");e.textContent=t;e.className="meta "+(ok?"ok":"warn");}
+function pxErr(d,fallback){
+  var m=(d&&d.error&&d.error.message)||"";
+  var u=(m.match(/https:\/\/console\.developers\.google\.com[^\s]+/)||[])[0];
+  if(/has not been used|is disabled/.test(m)&&u){
+    var e=$("pxmsg");e.className="meta warn";e.textContent="Apps Script側でGoogle Calendar APIが無効になっている。次のリンクを開いて「有効にする」を押し、数分待ってからもう一度試して: ";
+    var a=document.createElement("a");a.href=u;a.target="_blank";a.rel="noopener";a.textContent="APIを有効にするページ";e.appendChild(a);
+    return;
+  }
+  pxMsg("つながったが、カレンダーを読めない: "+(m||fallback),false);
+}
 function pxRender(){
   $("pxsetup").hidden=!!PROXY; $("pxon").hidden=!PROXY;
   if(!PROXY){ $("pxcode").value=pxCode(pxDraftKey()); $("pxdet").open=true; }
@@ -934,7 +944,7 @@ function pxTest(){
   pxMsg("確認中…",true);
   gapi(EVURL+"?maxResults=1").then(function(d){
     if(d&&d.kind){ pxMsg("つながった("+fmt(Date.now())+")",true); }
-    else pxMsg("つながったが、カレンダーを読めない: "+((d&&d.error&&d.error.message)||"不明なエラー"),false);
+    else pxErr(d,"不明なエラー");
   }).catch(function(){ pxMsg("つながらない。通信状況と、デプロイの「アクセスできるユーザー」が「全員」になっているか確認して",false); });
 }
 $("pxcopy").onclick=function(){
@@ -948,7 +958,7 @@ $("pxsave").onclick=function(){
   PROXY=o;proxyBad=false;pxFails=0;
   gapi(EVURL+"?maxResults=1").then(function(d){
     if(d&&d.kind){ try{localStorage.setItem(PXKEY,JSON.stringify(o));}catch(e){} location.reload(); }
-    else{ PROXY=null;pxFails=0;proxyBad=false; pxMsg("つながったが、カレンダーを読めない: "+((d&&d.error&&d.error.message)||"手順3の許可をやったか確認して"),false); }
+    else{ PROXY=null;pxFails=0;proxyBad=false; pxErr(d,"手順3の許可をやったか確認して"); }
   }).catch(function(){ PROXY=null;pxFails=0;proxyBad=false; pxMsg("つながらない。URLが正しいか、デプロイの「アクセスできるユーザー」が「全員」か確認して",false); });
 };
 $("pxlink").onclick=function(){
