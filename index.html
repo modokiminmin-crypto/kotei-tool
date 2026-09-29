@@ -74,6 +74,9 @@ label.fl{display:block;font-size:13px;color:var(--sub);font-weight:700;margin:12
 .chip:has(input:checked){background:var(--acc);color:var(--accink);border-color:var(--acc)}
 .chip:has(input:focus-visible){outline:3px solid var(--acc);outline-offset:2px}
 .ok{color:var(--ok)}.warn{color:var(--warn)}
+.gbanner{background:var(--tagh);color:var(--taghc);border-radius:18px;padding:14px 16px;margin-top:14px}
+.gbanner b{display:block;font-size:15px;margin-bottom:4px}
+.gbanner p{margin:0;font-size:13px}
 .bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:6px}
 .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--g1),var(--g2))}
 .sum{font-size:32px;font-weight:900}
@@ -88,6 +91,12 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <main>
   <header class="top"><div><span id="date"></span><b id="clock"></b></div><span class="pill" id="pill">未連携</span></header>
+
+  <section class="gbanner" id="gbanner" hidden>
+    <b>Googleと連携してください</b>
+    <p id="gbmsg"></p>
+    <button class="big" id="gbbtn">Googleと連携する</button>
+  </section>
 
   <div id="p-home">
     <section class="hero" id="nowcard">
@@ -369,37 +378,65 @@ function updateGcalStatus(){
   $("pill").textContent=on?"カレンダー連携中":"未連携";
   $("pill").className="pill"+(on?" on":"");
   $("addnote").textContent=on?"":"先に「Googleと連携する」を押してね";
+  var gb=$("gbanner"); gb.hidden=on;
+  if(!on){
+    var rr=running(), nn=log.filter(needSync).length;
+    $("gbmsg").textContent=rr?"実行中の「"+rr.n+"」はまだカレンダーに記録されていません。連携すると、ここまでの分も自動で反映されます。"
+      :(nn?"カレンダーに未反映の記録が"+nn+"件あります。連携すると自動で反映されます。":"連携が切れています。ボタンを押すとすぐ再連携できます。");
+  }
 }
 function initGcal(){
   if(!window.google||!google.accounts||!google.accounts.oauth2){setTimeout(initGcal,300);return;}
   tokenClient=google.accounts.oauth2.initTokenClient({
     client_id:CLIENT_ID, scope:GCAL_SCOPE,
-    callback:function(resp){ if(resp&&resp.access_token){saveToken(resp.access_token,resp.expires_in);updateGcalStatus();fetchCal();syncBackup();} }
+    callback:function(resp){ if(resp&&resp.access_token){try{localStorage.setItem("kotei_glinked","1");}catch(e){} saveToken(resp.access_token,resp.expires_in);updateGcalStatus();fetchCal();syncBackup();gcalSync();} },
+    error_callback:function(){}
   });
   updateGcalStatus();
-  if(gcalConnected()){ scheduleRefresh(); fetchCal(); syncBackup(); }
-  setInterval(function(){if(!document.hidden)fetchCal();},30000);
+  if(gcalConnected()){ scheduleRefresh(); fetchCal(); syncBackup(); gcalSync(); }
+  setInterval(function(){if(!document.hidden){fetchCal();gcalSync();}},30000);
   document.addEventListener("visibilitychange",function(){if(!document.hidden)fetchCal();});
   window.addEventListener("focus",fetchCal);
 }
 // 実行記録をカレンダーに残す(一覧には出さない印を付ける)
+// 連携が切れていて反映できなかった分は、次に連携したときにまとめて直す(gcalSync)
+var busy=[];
+function lock(x){if(busy.indexOf(x)>=0)return false;busy.push(x);return true;}
+function unlock(x){var i=busy.indexOf(x);if(i>=0)busy.splice(i,1);}
+function gok(d){return !!d&&!d.error;}
+function gone(d){return !!d&&!!d.error&&(d.error.code===404||d.error.code===410);}
+function needSync(x){ if(x.s<day0()) return false; if(!x.gid) return true; if(x.ex&&!x.gs) return true; return x.e!==null&&x.ge!==x.e; }
 function gcalCreate(entry,detail){
-  if(!gcalConnected()) return;
-  gapi(EVURL,{method:"POST",body:JSON.stringify({summary:entry.n,description:detail||"",start:{dateTime:new Date(entry.s).toISOString()},end:{dateTime:new Date(entry.s+60000).toISOString()},extendedProperties:{"private":{koteiLog:"1"}}})})
-    .then(function(d){ if(d&&d.id){entry.gid=d.id; save(); if(entry.e) gcalPatchEnd(entry);} }).catch(function(){});
+  if(!gcalConnected()||entry.gid||!lock(entry)) return;
+  var useE=entry.e, end=useE?Math.max(useE,entry.s+1000):entry.s+60000;
+  gapi(EVURL,{method:"POST",body:JSON.stringify({summary:entry.n,description:(detail!=null?detail:entry.dt)||"",start:{dateTime:new Date(entry.s).toISOString()},end:{dateTime:new Date(end).toISOString()},extendedProperties:{"private":{koteiLog:"1"}}})})
+    .then(function(d){ unlock(entry); if(gok(d)&&d.id){entry.gid=d.id; if(useE) entry.ge=useE; save(); if(entry.e&&entry.ge!==entry.e) gcalPatchEnd(entry);} }).catch(function(){unlock(entry);});
 }
 function gcalPatchEnd(entry){
-  if(!gcalConnected()||!entry.gid) return;
-  gapi(EVURL+"/"+encodeURIComponent(entry.gid),{method:"PATCH",body:JSON.stringify({end:{dateTime:new Date(Math.max(entry.e,entry.s+1000)).toISOString(),date:null}})})
-    .then(function(){ if(entry.ex) fetchCal(); }).catch(function(){});
+  if(!gcalConnected()||!entry.gid||entry.e===null||!lock(entry)) return;
+  var e=entry.e;
+  gapi(EVURL+"/"+encodeURIComponent(entry.gid),{method:"PATCH",body:JSON.stringify({end:{dateTime:new Date(Math.max(e,entry.s+1000)).toISOString(),date:null}})})
+    .then(function(d){ unlock(entry); if(gok(d)||gone(d)){entry.ge=e;save();} if(entry.ex) fetchCal(); }).catch(function(){unlock(entry);});
 }
 // すでにあるカレンダー予定を「開始」したら、新規作成せずその予定の時刻を直接書き換える
 function gcalAdopt(entry,cev){
-  entry.gid=cev.id; entry.ex=true; save();
+  entry.gid=cev.id; entry.ex=true; entry.pe=cev.e0||0; save();
+  adoptPatch(entry);
+}
+function adoptPatch(entry){
+  if(!gcalConnected()||!lock(entry)) return;
+  var e=entry.e, end=e?Math.max(e,entry.s+1000):((entry.pe>entry.s+60000)?entry.pe:entry.s+60000);
+  gapi(EVURL+"/"+encodeURIComponent(entry.gid),{method:"PATCH",body:JSON.stringify({start:{dateTime:new Date(entry.s).toISOString(),date:null},end:{dateTime:new Date(end).toISOString(),date:null}})})
+    .then(function(d){ unlock(entry); if(gok(d)||gone(d)){entry.gs=true; if(e)entry.ge=e; save(); if(entry.e&&entry.ge!==entry.e) gcalPatchEnd(entry);} fetchCal(); }).catch(function(){unlock(entry);});
+}
+function gcalSync(){
   if(!gcalConnected()) return;
-  var end=(cev.e0&&cev.e0>entry.s+60000)?cev.e0:entry.s+60000;
-  gapi(EVURL+"/"+encodeURIComponent(cev.id),{method:"PATCH",body:JSON.stringify({start:{dateTime:new Date(entry.s).toISOString(),date:null},end:{dateTime:new Date(end).toISOString(),date:null}})})
-    .then(function(){fetchCal();}).catch(function(){});
+  log.forEach(function(x){
+    if(!needSync(x)) return;
+    if(!x.gid) gcalCreate(x);
+    else if(x.ex&&!x.gs) adoptPatch(x);
+    else gcalPatchEnd(x);
+  });
 }
 var CAL=[], HOL={}, holFail=false, RANGE=14;
 function norm(ev){
@@ -507,6 +544,7 @@ function endAndAdvance(){
 
 // ===== 画面描画 =====
 function render(){
+  updateGcalStatus();
   if(SKDAY!==todayStr()){SKDAY=todayStr();SKIP=[];saveSkip();}
   var d=new Date(),r=running(),sg=suggested(),btn=$("mainbtn"),L=TT();
   $("date").textContent=(d.getMonth()+1)+"/"+d.getDate()+" ("+"日月火水木金土"[d.getDay()]+")";
@@ -767,8 +805,10 @@ $("cdelall").onclick=function(){ if(editingEv) calDelete(editingEv.rid,"くり�
 $("listRange").onchange=function(){RANGE=+$("listRange").value;fetchCal();};
 $("gcalbtn").onclick=function(){
   if(!tokenClient){alert("読み込み中。少し待ってもう一度押して");return;}
-  tokenClient.requestAccessToken({prompt: gcalConnected()?"":"consent"});
+  var linked=false; try{linked=!!localStorage.getItem("kotei_glinked");}catch(e){}
+  tokenClient.requestAccessToken({prompt: (gcalConnected()||linked)?"":"consent"});
 };
+$("gbbtn").onclick=$("gcalbtn").onclick;
 
 // ===== AI用リザルト =====
 function buildText(){
