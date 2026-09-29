@@ -74,6 +74,7 @@ label.fl{display:block;font-size:13px;color:var(--sub);font-weight:700;margin:12
 .chip:has(input:checked){background:var(--acc);color:var(--accink);border-color:var(--acc)}
 .chip:has(input:focus-visible){outline:3px solid var(--acc);outline-offset:2px}
 .ok{color:var(--ok)}.warn{color:var(--warn)}
+.ver{text-align:center;font-size:11px;color:var(--sub);margin-top:18px;opacity:.8}
 .gbanner{background:var(--tagh);color:var(--taghc);border-radius:18px;padding:14px 16px;margin-top:14px}
 .gbanner b{display:block;font-size:15px;margin-bottom:4px}
 .gbanner p{margin:0;font-size:13px}
@@ -208,12 +209,15 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
       <textarea id="copyarea" hidden readonly style="width:100%;height:160px;margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);font-size:14px"></textarea>
     </section>
   </div>
+  <div class="ver" id="ver"></div>
 </main>
 <nav class="tabs" aria-label="画面切り替え">
   <button id="n-home" class="on">ホーム</button><button id="n-tool">ツールタスク</button><button id="n-cal">カレンダー</button><button id="n-rec">記録</button>
 </nav>
 
 <script>
+// バージョン(更新するたびに数字を1つ上げる)
+var VERSION=1;
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function p2(n){return ("0"+n).slice(-2);}
@@ -431,8 +435,10 @@ function adoptPatch(entry){
 }
 function gcalSync(){
   if(!gcalConnected()) return;
+  var n=0;
   log.forEach(function(x){
-    if(!needSync(x)) return;
+    if(n>=5||!needSync(x)||busy.indexOf(x)>=0) return;
+    n++;
     if(!x.gid) gcalCreate(x);
     else if(x.ex&&!x.gs) adoptPatch(x);
     else gcalPatchEnd(x);
@@ -545,6 +551,7 @@ function endAndAdvance(){
 // ===== 画面描画 =====
 function render(){
   updateGcalStatus();
+  $("ver").textContent="バージョン "+VERSION;
   if(SKDAY!==todayStr()){SKDAY=todayStr();SKIP=[];saveSkip();}
   var d=new Date(),r=running(),sg=suggested(),btn=$("mainbtn"),L=TT();
   $("date").textContent=(d.getMonth()+1)+"/"+d.getDate()+" ("+"日月火水木金土"[d.getDay()]+")";
