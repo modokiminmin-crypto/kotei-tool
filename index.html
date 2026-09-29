@@ -78,6 +78,16 @@ label.fl{display:block;font-size:13px;color:var(--sub);font-weight:700;margin:12
 .gbanner{background:var(--tagh);color:var(--taghc);border-radius:18px;padding:14px 16px;margin-top:14px}
 .gbanner b{display:block;font-size:15px;margin-bottom:4px}
 .gbanner p{margin:0;font-size:13px}
+.gbanner .hint{margin-top:8px;font-size:12px;text-decoration:underline;cursor:pointer;opacity:.9}
+details.px summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:17px;font-weight:900}
+details.px summary::-webkit-details-marker{display:none}
+details.px summary::after{content:"\25BE";color:var(--sub);font-size:14px}
+details.px[open] summary::after{content:"\25B4"}
+.px ol{padding-left:20px;margin:10px 0 4px;font-size:14px}
+.px ol li{margin:7px 0}
+.px textarea{width:100%;height:150px;margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);font-size:12px;font-family:ui-monospace,Menlo,monospace;box-sizing:border-box}
+.px .row{margin-top:10px;flex-wrap:wrap}
+.px input[type=text]{width:100%;box-sizing:border-box;margin-top:6px}
 .bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:6px}
 .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--g1),var(--g2))}
 .sum{font-size:32px;font-weight:900}
@@ -94,9 +104,10 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
   <header class="top"><div><span id="date"></span><b id="clock"></b></div><span class="pill" id="pill">未連携</span></header>
 
   <section class="gbanner" id="gbanner" hidden>
-    <b>Googleと連携してください</b>
+    <b id="gbtitle">Googleと連携してください</b>
     <p id="gbmsg"></p>
     <button class="big" id="gbbtn">Googleと連携する</button>
+    <p class="hint" id="gbhint">ずっと連携したままにするには、ここを押して「常時連携」を設定</p>
   </section>
 
   <div id="p-home">
@@ -169,6 +180,32 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
       <div class="meta ok" id="addmsg"></div>
     </section>
 
+    <section class="card px">
+      <details id="pxdet">
+        <summary><span>常時連携(Apps Script)</span><span class="pill" id="pxpill">未設定</span></summary>
+        <div id="pxsetup">
+          <div class="meta" style="margin-top:8px">Googleの無料機能を「窓口」にして、ログインの期限切れをなくす設定。最初に1回だけ、パソコンでやるのがおすすめ。</div>
+          <ol>
+            <li>このツール用のGoogleアカウントで <b>script.google.com</b> を開き、「新しいプロジェクト」を作る</li>
+            <li>最初から入っているコードを全部消して、下の「コードをコピー」で貼り付け、保存する</li>
+            <li>上の関数選択で <b>_scope</b> を選び「実行」。許可の画面が出たら進める(「安全でないページに移動」と出ても、自分のコードなので大丈夫)</li>
+            <li>右上「デプロイ」→「新しいデプロイ」→ 種類「ウェブアプリ」。<b>次のユーザーとして実行: 自分</b>、<b>アクセスできるユーザー: 全員</b> にしてデプロイ</li>
+            <li>出てきた「ウェブアプリのURL」をコピーして、下に貼り付ける</li>
+          </ol>
+          <div class="row"><button class="ghost" id="pxcopy">コードをコピー</button></div>
+          <textarea id="pxcode" readonly></textarea>
+          <label class="fl" for="pxurl">ウェブアプリのURL</label>
+          <input type="text" id="pxurl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" autocapitalize="off">
+          <div class="row"><button class="big" id="pxsave" style="margin:0;padding:13px;flex:1">保存して接続する</button></div>
+        </div>
+        <div id="pxon" hidden>
+          <div class="meta" style="margin-top:8px">常時連携が有効。Googleのログインは使わず、期限切れもない。</div>
+          <div class="row"><button class="ghost" id="pxtest">接続テスト</button><button class="ghost" id="pxlink">他の端末用のリンクをコピー</button><button class="ghost danger" id="pxoff">解除する</button></div>
+        </div>
+        <div class="meta" id="pxmsg" style="margin-top:8px"></div>
+      </details>
+    </section>
+
     <section class="card" id="cformcard" hidden>
       <h3 id="cformtitle">カレンダーに予定を追加</h3>
       <div id="cformbox"></div>
@@ -217,7 +254,7 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
 
 <script>
 // バージョン(更新するたびに数字を1つ上げる)
-var VERSION=1;
+var VERSION=2;
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function p2(n){return ("0"+n).slice(-2);}
@@ -365,10 +402,30 @@ function saveToken(token,expSec){
   try{localStorage.setItem(GTOKKEY,JSON.stringify({token:gToken,exp:gTokenExp}));}catch(e){}
   scheduleRefresh();
 }
-function gcalConnected(){return !!gToken && Date.now()<gTokenExp;}
+// --- 常時連携(Apps Script経由) ---
+var PXKEY="kotei_proxy", PXDRAFT="kotei_pxdraft", PROXY=null, proxyBad=false, pxFails=0;
+try{ PROXY=JSON.parse(localStorage.getItem(PXKEY)); if(!PROXY||!PROXY.url||!PROXY.key) PROXY=null; }catch(e){PROXY=null;}
+(function(){ // 他の端末用リンクから設定を取り込む
+  var h=location.hash;
+  if(h.indexOf("#proxy=")===0){
+    try{ var o=JSON.parse(atob(decodeURIComponent(h.slice(7)))); if(o&&o.url&&o.key){ localStorage.setItem(PXKEY,JSON.stringify(o)); PROXY=o; } }catch(e){}
+    try{ history.replaceState(null,"",location.pathname+location.search); }catch(e){}
+  }
+})();
+function proxyFail(){ pxFails++; if(pxFails>=2&&!proxyBad){proxyBad=true;updateGcalStatus();} }
+function proxyOk(){ pxFails=0; if(proxyBad){proxyBad=false;updateGcalStatus();fetchCal();syncBackup();gcalSync();} }
+function pxPing(){ return gapi(EVURL+"?maxResults=1").catch(function(){}); }
+function gcalConnected(){ if(PROXY) return !proxyBad; return !!gToken && Date.now()<gTokenExp; }
 function refreshNow(){ if(tokenClient&&Date.now()-lastRef>300000){lastRef=Date.now();try{tokenClient.requestAccessToken({prompt:""});}catch(e){}} }
 function gapi(url,opt){
-  opt=opt||{};opt.headers={"Authorization":"Bearer "+gToken,"Content-Type":"application/json"};
+  opt=opt||{};
+  if(PROXY){
+    return fetch(PROXY.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({key:PROXY.key,url:url,method:opt.method||"GET",body:opt.body||null})})
+      .then(function(r){return r.json();})
+      .then(function(d){ if(d&&d.kotei){proxyFail();throw new Error("proxy");} proxyOk(); return d; },
+            function(e){ proxyFail(); throw e; });
+  }
+  opt.headers={"Authorization":"Bearer "+gToken,"Content-Type":"application/json"};
   return fetch(url,opt).then(function(r){
     if(r.status===401){gTokenExp=0;updateGcalStatus();refreshNow();throw new Error("401");}
     return r.status===204?{ok:1}:r.json();
@@ -377,19 +434,37 @@ function gapi(url,opt){
 var calAt=0;
 function updateGcalStatus(){
   var on=gcalConnected();
-  $("gcalstatus").textContent=on?"連携中"+(calAt?"(最終更新 "+fmt(calAt)+")":""):"未連携。連携するとカレンダーと同期できる";
-  $("gcalbtn").textContent=on?"再連携する":"Googleと連携する";
-  $("pill").textContent=on?"カレンダー連携中":"未連携";
+  $("gcalstatus").textContent=on?(PROXY?"常時連携中(Apps Script)":"連携中")+(calAt?"(最終更新 "+fmt(calAt)+")":""):(PROXY?"Apps Scriptにつながらない":"未連携。連携するとカレンダーと同期できる");
+  $("gcalbtn").textContent=PROXY?"接続を確認する":(on?"再連携する":"Googleと連携する");
+  $("gbbtn").textContent=PROXY?"再接続を試す":"Googleと連携する";
+  $("gbtitle").textContent=PROXY?"Apps Scriptにつながりません":"Googleと連携してください";
+  $("gbhint").hidden=!!PROXY;
+  $("pill").textContent=on?(PROXY?"常時連携中":"カレンダー連携中"):(PROXY?"接続エラー":"未連携");
   $("pill").className="pill"+(on?" on":"");
-  $("addnote").textContent=on?"":"先に「Googleと連携する」を押してね";
+  $("addnote").textContent=on?"":(PROXY?"Apps Scriptにつながっていない":"先に「Googleと連携する」を押してね");
+  var pp=$("pxpill"); if(pp){pp.textContent=PROXY?(proxyBad?"接続エラー":"有効"):"未設定"; pp.className="pill"+(PROXY&&!proxyBad?" on":"");}
   var gb=$("gbanner"); gb.hidden=on;
   if(!on){
     var rr=running(), nn=log.filter(needSync).length;
-    $("gbmsg").textContent=rr?"実行中の「"+rr.n+"」はまだカレンダーに記録されていません。連携すると、ここまでの分も自動で反映されます。"
-      :(nn?"カレンダーに未反映の記録が"+nn+"件あります。連携すると自動で反映されます。":"連携が切れています。ボタンを押すとすぐ再連携できます。");
+    if(PROXY){
+      $("gbmsg").textContent=(rr?"実行中の「"+rr.n+"」はまだカレンダーに記録されていません。":"")+"通信状況を確認してください。自動で再接続を試していて、つながると未反映の分も自動で反映されます。";
+    }else{
+      $("gbmsg").textContent=rr?"実行中の「"+rr.n+"」はまだカレンダーに記録されていません。連携すると、ここまでの分も自動で反映されます。"
+        :(nn?"カレンダーに未反映の記録が"+nn+"件あります。連携すると自動で反映されます。":"連携が切れています。ボタンを押すとすぐ再連携できます。");
+    }
   }
 }
+function startLoops(){
+  setInterval(function(){
+    if(document.hidden) return;
+    if(PROXY&&proxyBad){pxPing();return;}
+    fetchCal();gcalSync();
+  },30000);
+  document.addEventListener("visibilitychange",function(){if(!document.hidden)fetchCal();});
+  window.addEventListener("focus",fetchCal);
+}
 function initGcal(){
+  if(PROXY){ updateGcalStatus(); fetchCal(); syncBackup(); gcalSync(); startLoops(); return; }
   if(!window.google||!google.accounts||!google.accounts.oauth2){setTimeout(initGcal,300);return;}
   tokenClient=google.accounts.oauth2.initTokenClient({
     client_id:CLIENT_ID, scope:GCAL_SCOPE,
@@ -398,9 +473,7 @@ function initGcal(){
   });
   updateGcalStatus();
   if(gcalConnected()){ scheduleRefresh(); fetchCal(); syncBackup(); gcalSync(); }
-  setInterval(function(){if(!document.hidden){fetchCal();gcalSync();}},30000);
-  document.addEventListener("visibilitychange",function(){if(!document.hidden)fetchCal();});
-  window.addEventListener("focus",fetchCal);
+  startLoops();
 }
 // 実行記録をカレンダーに残す(一覧には出さない印を付ける)
 // 連携が切れていて反映できなかった分は、次に連携したときにまとめて直す(gcalSync)
@@ -444,7 +517,7 @@ function gcalSync(){
     else gcalPatchEnd(x);
   });
 }
-var CAL=[], HOL={}, holFail=false, RANGE=14;
+var CAL=[], HOL={}, holFail=false, RANGE=14, holAt=0, holRange=0;
 function norm(ev){
   var all=!!ev.start.date&&!ev.start.dateTime, s=ev.start.dateTime?new Date(ev.start.dateTime):null, e=(ev.end&&ev.end.dateTime)?new Date(ev.end.dateTime):null;
   var sd=all?ev.start.date:ymd(s), ed=all?((ev.end&&ev.end.date)?addDays(ev.end.date,-1):sd):(e?ymd(e):sd);
@@ -452,6 +525,7 @@ function norm(ev){
   return {id:ev.id,rid:ev.recurringEventId||"",name:ev.summary||"(無題)",detail:ev.description||"",all:all,sd:sd,ed:ed,st:s?fmt(s.getTime()):"",et:e?fmt(e.getTime()):"",s0:s?s.getTime():0,e0:e?e.getTime():0};
 }
 function fetchCal(){
+  if(PROXY&&proxyBad){pxPing();return;}
   if(!gcalConnected()){ if(gToken) refreshNow(); CAL=[]; updateGcalStatus(); renderTasks(running()); renderCalList(); return; }
   var d0=new Date();d0.setHours(0,0,0,0);
   var d1=new Date(d0.getTime()+RANGE*86400000);
@@ -464,11 +538,11 @@ function fetchCal(){
     }).map(norm);
     calAt=Date.now(); updateGcalStatus(); renderTasks(running()); renderCalList();
   }).catch(function(){});
-  if(!holFail) gapi(HOLURL+q).then(function(d){
+  if(!holFail&&(Date.now()-holAt>3600000||holRange!==RANGE)){ holAt=Date.now(); holRange=RANGE; gapi(HOLURL+q).then(function(d){
     if(d.error){holFail=true;return;}
     HOL={};(d.items||[]).forEach(function(ev){ if(ev.start&&ev.start.date) HOL[ev.start.date]=ev.summary||"祝日"; });
     renderTasks(running()); renderCalList();
-  }).catch(function(){});
+  }).catch(function(){holAt=0;}); }
 }
 // ===== Googleへのバックアップ(ツールタスク) =====
 function tasksTs(){try{return +(localStorage.getItem(TSKEY)||0);}catch(e){return 0;}}
@@ -811,11 +885,85 @@ $("cdel1").onclick=function(){ if(editingEv) calDelete(editingEv.id,editingEv.ri
 $("cdelall").onclick=function(){ if(editingEv) calDelete(editingEv.rid,"くり返しの予定を全部削除する?(過去分も消える)"); };
 $("listRange").onchange=function(){RANGE=+$("listRange").value;fetchCal();};
 $("gcalbtn").onclick=function(){
+  if(PROXY){ pxTest(); return; }
   if(!tokenClient){alert("読み込み中。少し待ってもう一度押して");return;}
   var linked=false; try{linked=!!localStorage.getItem("kotei_glinked");}catch(e){}
   tokenClient.requestAccessToken({prompt: (gcalConnected()||linked)?"":"consent"});
 };
 $("gbbtn").onclick=$("gcalbtn").onclick;
+
+// ===== 常時連携の設定画面 =====
+function pxDraftKey(){
+  var k="";try{k=localStorage.getItem(PXDRAFT)||"";}catch(e){}
+  if(!k){
+    var a=new Uint8Array(18);(window.crypto||window.msCrypto).getRandomValues(a);
+    k=Array.prototype.map.call(a,function(b){return ("0"+b.toString(16)).slice(-2);}).join("");
+    try{localStorage.setItem(PXDRAFT,k);}catch(e){}
+  }
+  return k;
+}
+function pxCode(k){
+  return [
+    'var KEY="'+k+'";',
+    'function doPost(e){',
+    '  var out;',
+    '  try{',
+    '    var q=JSON.parse(e.postData.contents);',
+    '    var base="https://www.googleapis.com/calendar/v3/calendars/";',
+    '    var okUrl=typeof q.url==="string"&&(q.url.indexOf(base+"primary/events")===0||q.url.indexOf(base+"ja.japanese")===0);',
+    '    if(q.key!==KEY){out={kotei:1,error:{code:403,message:"key"}};}',
+    '    else if(!okUrl){out={kotei:1,error:{code:400,message:"url"}};}',
+    '    else{',
+    '      var opt={method:String(q.method||"GET").toLowerCase(),headers:{Authorization:"Bearer "+ScriptApp.getOAuthToken()},muteHttpExceptions:true};',
+    '      if(q.body){opt.payload=q.body;opt.contentType="application/json";}',
+    '      var t=UrlFetchApp.fetch(q.url,opt).getContentText();',
+    '      out=t?JSON.parse(t):{ok:1};',
+    '    }',
+    '  }catch(err){out={kotei:1,error:{code:500,message:String(err)}};}',
+    '  return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);',
+    '}',
+    'function _scope(){CalendarApp.getDefaultCalendar();}'
+  ].join("\n");
+}
+function pxMsg(t,ok){var e=$("pxmsg");e.textContent=t;e.className="meta "+(ok?"ok":"warn");}
+function pxRender(){
+  $("pxsetup").hidden=!!PROXY; $("pxon").hidden=!PROXY;
+  if(!PROXY){ $("pxcode").value=pxCode(pxDraftKey()); $("pxdet").open=true; }
+}
+function pxTest(){
+  pxMsg("確認中…",true);
+  gapi(EVURL+"?maxResults=1").then(function(d){
+    if(d&&d.kind){ pxMsg("つながった("+fmt(Date.now())+")",true); }
+    else pxMsg("つながったが、カレンダーを読めない: "+((d&&d.error&&d.error.message)||"不明なエラー"),false);
+  }).catch(function(){ pxMsg("つながらない。通信状況と、デプロイの「アクセスできるユーザー」が「全員」になっているか確認して",false); });
+}
+$("pxcopy").onclick=function(){
+  copyText(pxCode(pxDraftKey())).then(function(ok){ pxMsg(ok?"コードをコピーした。Apps Scriptに貼り付けてね":"自動コピーできなかった。下のコードを長押しでコピーして",ok); });
+};
+$("pxsave").onclick=function(){
+  var u=$("pxurl").value.trim();
+  if(u.indexOf("https://script.google.com/macros/")!==0||u.indexOf("/exec")<0){ pxMsg("URLは https://script.google.com/macros/s/…/exec の形のものを貼ってね",false); return; }
+  var o={url:u,key:pxDraftKey()};
+  pxMsg("接続を確認中…",true);
+  PROXY=o;proxyBad=false;pxFails=0;
+  gapi(EVURL+"?maxResults=1").then(function(d){
+    if(d&&d.kind){ try{localStorage.setItem(PXKEY,JSON.stringify(o));}catch(e){} location.reload(); }
+    else{ PROXY=null;pxFails=0;proxyBad=false; pxMsg("つながったが、カレンダーを読めない: "+((d&&d.error&&d.error.message)||"手順3の許可をやったか確認して"),false); }
+  }).catch(function(){ PROXY=null;pxFails=0;proxyBad=false; pxMsg("つながらない。URLが正しいか、デプロイの「アクセスできるユーザー」が「全員」か確認して",false); });
+};
+$("pxlink").onclick=function(){
+  if(!PROXY) return;
+  var link=location.origin+location.pathname+"#proxy="+encodeURIComponent(btoa(JSON.stringify(PROXY)));
+  copyText(link).then(function(ok){ pxMsg(ok?"リンクをコピーした。他の端末のブラウザで開くと同じ設定になる。人には見せないでね":"コピーできなかった",ok); });
+};
+$("pxoff").onclick=function(){
+  if(!confirm("常時連携を解除する?Googleのログイン方式に戻る。")) return;
+  try{localStorage.removeItem(PXKEY);localStorage.removeItem(PXDRAFT);}catch(e){}
+  location.reload();
+};
+$("pxtest").onclick=pxTest;
+$("gbhint").onclick=function(){ showPane("cal"); $("pxdet").open=true; };
+pxRender();
 
 // ===== AI用リザルト =====
 function buildText(){
@@ -872,7 +1020,7 @@ $("reset").onclick=function(){
 };
 $("resetall").onclick=function(){
   if(!confirm("この端末のデータを削除する?ツールタスク・記録・Google連携の情報が消える。Googleに保存済みのバックアップは残り、次に連携すると復元される。")) return;
-  try{[KEY,TKEY1,TKEY2,TSKEY,SKKEY,GTOKKEY,PKEY].forEach(function(k){localStorage.removeItem(k);});}catch(e){}
+  try{[KEY,TKEY1,TKEY2,TSKEY,SKKEY,GTOKKEY,PKEY,PXKEY,PXDRAFT].forEach(function(k){localStorage.removeItem(k);});}catch(e){}
   location.reload();
 };
 var PANES=["home","tool","cal","rec"];
