@@ -95,11 +95,23 @@ details.px[open] summary::after{content:"\25B4"}
 nav.tabs{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));max-width:496px;margin:0 auto;display:flex;gap:4px;padding:6px;background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:0 10px 30px -10px rgba(20,26,61,.35)}
 nav.tabs button{flex:1;border:0;background:none;color:var(--sub);padding:11px 0;border-radius:16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
 nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff}
+.nrow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;font-size:13px;font-weight:700;color:rgba(255,255,255,.9)}
+.nrow select{width:auto;flex:none;padding:7px 10px;font-size:14px;border-color:rgba(255,255,255,.35);background:rgba(255,255,255,.16);color:#fff}
+.nrow select option{color:#141a3d}
+#toasts{position:fixed;left:12px;right:12px;top:calc(8px + env(safe-area-inset-top,0px));max-width:496px;margin:0 auto;z-index:50;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{pointer-events:auto;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--acc);border-radius:16px;padding:12px 14px;box-shadow:0 14px 34px -12px rgba(20,26,61,.45)}
+.toast b{display:block;font-size:15px}
+.toast p{margin:2px 0 0;font-size:13px;color:var(--sub)}
+.toast .row{margin-top:10px;flex-wrap:wrap}
+.chk{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:15px;cursor:pointer}
+.chk:first-of-type{border-top:0}
+.chk input{width:20px;height:20px;flex:none;accent-color:var(--acc)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<div id="toasts" aria-live="polite"></div>
 <main>
   <header class="top"><div><span id="date"></span><b id="clock"></b></div><span class="pill" id="pill">未連携</span></header>
 
@@ -119,6 +131,8 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
       <div class="meta" id="nowdetail" style="white-space:pre-wrap;margin-top:8px"></div>
       <button class="big" id="mainbtn"></button>
       <button class="ghost" id="stopbtn" style="width:100%;margin-top:10px;padding:14px" hidden>中断する</button>
+      <div class="nrow" id="nrow"><label for="nmsel">実行中のあいだ、定期的に声をかける</label>
+        <select id="nmsel"><option value="0">かけない</option><option value="15">15分ごと</option><option value="30">30分ごと</option><option value="45">45分ごと</option><option value="60">60分ごと</option><option value="90">90分ごと</option></select></div>
     </section>
 
     <section class="card" id="pausedcard" hidden>
@@ -262,6 +276,29 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
       <div class="meta" id="copymsg" style="margin-top:8px"></div>
       <textarea id="copyarea" hidden readonly style="width:100%;height:160px;margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);font-size:14px"></textarea>
     </section>
+    <section class="card" id="nscard">
+      <h3>通知設定(この端末)</h3>
+      <div class="meta">PCとスマホで、それぞれ別に設定できる。</div>
+      <label class="chk"><input type="checkbox" id="nson">通知を使う</label>
+      <label class="fl" for="nslead">予定の何分前に知らせる</label>
+      <select id="nslead"><option value="0">開始時刻ちょうど</option><option value="1">1分前</option><option value="3">3分前</option><option value="5">5分前</option><option value="10">10分前</option><option value="15">15分前</option><option value="30">30分前</option></select>
+      <label class="fl">知らせる内容</label>
+      <label class="chk"><input type="checkbox" id="nscal">カレンダー予定が近づいたら</label>
+      <label class="chk"><input type="checkbox" id="nstool">ツールタスクが近づいたら</label>
+      <label class="chk"><input type="checkbox" id="nsover">予定の終了時刻を過ぎても実行中なら(終了の押し忘れ)</label>
+      <label class="fl" for="nssz">スヌーズ(通知の「あと○分」ボタン)</label>
+      <select id="nssz"><option value="0">使わない</option><option value="1">1分</option><option value="3">3分</option><option value="5">5分</option><option value="10">10分</option><option value="15">15分</option></select>
+      <label class="fl">時刻指定の通知(毎日、決めた時刻に知らせる)</label>
+      <div id="fxlist"></div>
+      <div class="row" style="margin-top:8px"><button class="ghost sm" id="fxadd">+ 時刻を追加</button></div>
+      <label class="fl">知らせ方</label>
+      <label class="chk"><input type="checkbox" id="nssnd">音</label>
+      <label class="chk"><input type="checkbox" id="nsvib">バイブ(Androidのみ。iPhoneは非対応)</label>
+      <label class="chk"><input type="checkbox" id="nssys">ブラウザの通知(PCのブラウザ向け)</label>
+      <div class="row" style="margin-top:10px"><button class="ghost" id="nstest">テスト通知</button></div>
+      <div class="meta" id="nsmsg" style="margin-top:8px"></div>
+      <div class="note">この通知は<b>アプリを開いている間だけ</b>動く。閉じている間やロック中は鳴らない。「定期的に声をかける」は、タスクの実行中に、選んだ間隔で「まだ続いてる?終わっていれば終了を押そう」と知らせる(終了か中断を押すまでくり返す)。閉じていても欲しい予定は、Googleカレンダー側の通知を使うか、今後追加予定のLINE通知を使う。</div>
+    </section>
   </div>
   <div class="ver" id="ver"></div>
 </main>
@@ -271,7 +308,7 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
 
 <script>
 // バージョン(更新するたびに数字を1つ上げる)
-var VERSION="1.05";
+var VERSION="1.09";
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function p2(n){return ("0"+n).slice(-2);}
@@ -607,7 +644,7 @@ function suggested(){
   return {t:best,now:false,in:bd};
 }
 function stopRun(){var r=running();if(r){ r.e=Date.now(); gcalPatchEnd(r); }}
-function start(name,planned,detail,cev){
+function start(name,planned,detail,cev,pe){
   var r=running();
   if(r&&r.n===name) return;
   if(r&&planned===false) addPaused(r);
@@ -617,6 +654,8 @@ function start(name,planned,detail,cev){
   var det=detail!=null?detail:(function(){var pt=TT().filter(function(t){return t[0]===name;})[0];return pt&&pt[3]?pt[3]:"";})();
   var again=cev&&log.some(function(x){return x.ex&&x.gid===cev.id;});
   var entry={n:name,s:Date.now(),e:null,p:planned,dt:det};
+  if(pe) entry.pe=pe;
+  if(NS.on&&NS.nm>0){ entry.ni=NS.nm*60000; entry.nt=Date.now()+entry.ni; }
   log.push(entry);
   save(); render();
   if(cev&&!cev.all&&!again) gcalAdopt(entry,cev); else gcalCreate(entry,det);
@@ -638,6 +677,170 @@ function endAndAdvance(){
   if(nx) start(nx[0],true); else{stopRun();setDone(todayStr());save();render();}
 }
 
+
+// ===== 通知(アプリを開いている間だけ動く) =====
+var NKEY="kotei_notify_v1", FKEY="kotei_fired_v1";
+var NS={on:true,lead:5,cal:true,tool:true,over:true,snd:true,vib:true,sys:false,nm:0,sz:5,fx:[]};
+try{ var n0=JSON.parse(localStorage.getItem(NKEY)); if(n0&&typeof n0==="object"){ for(var nk in NS){ if(n0[nk]!==undefined) NS[nk]=n0[nk]; } } }catch(e){}
+function saveNS(){ try{ localStorage.setItem(NKEY,JSON.stringify(NS)); }catch(e){} }
+var FIRED={d:todayStr(),k:[]};
+try{ var f0=JSON.parse(localStorage.getItem(FKEY)); if(f0&&f0.d===todayStr()&&Array.isArray(f0.k)) FIRED=f0; }catch(e){}
+function fired(k){ if(FIRED.d!==todayStr()) FIRED={d:todayStr(),k:[]}; return FIRED.k.indexOf(k)>=0; }
+function markFired(k){ fired(k); FIRED.k.push(k); if(FIRED.k.length>300) FIRED.k.shift(); try{ localStorage.setItem(FKEY,JSON.stringify(FIRED)); }catch(e){} }
+var AC=null;
+function audioUnlock(){ try{ if(!AC){ var C=window.AudioContext||window.webkitAudioContext; if(C) AC=new C(); } if(AC&&AC.state==="suspended") AC.resume(); }catch(e){} }
+["pointerdown","touchend","click"].forEach(function(ev){ document.addEventListener(ev,audioUnlock,{passive:true}); });
+function beep(){
+  if(!AC) return;
+  try{ [0,0.28].forEach(function(dl){
+    var t0=AC.currentTime+dl,o=AC.createOscillator(),g=AC.createGain();
+    o.type="sine";o.frequency.value=880;
+    g.gain.setValueAtTime(0.0001,t0);g.gain.exponentialRampToValueAtTime(0.25,t0+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t0+0.22);
+    o.connect(g);g.connect(AC.destination);o.start(t0);o.stop(t0+0.24);
+  }); }catch(e){}
+}
+var baseTitle=document.title;
+document.addEventListener("visibilitychange",function(){ if(!document.hidden) document.title=baseTitle; });
+function toast(title,body,acts){
+  var box=$("toasts");
+  while(box.children.length>=3) box.removeChild(box.firstChild);
+  var d=document.createElement("div");d.className="toast";
+  var b=document.createElement("b");b.textContent=title;d.appendChild(b);
+  if(body){ var p=document.createElement("p");p.textContent=body;d.appendChild(p); }
+  var row=document.createElement("div");row.className="row";
+  (acts||[]).forEach(function(a){
+    var x=document.createElement("button");x.className="ghost sm";x.textContent=a.t;
+    x.onclick=function(){ if(d.parentNode) d.parentNode.removeChild(d); try{ if(a.f) a.f(); }catch(e){} };
+    row.appendChild(x);
+  });
+  var c=document.createElement("button");c.className="ghost sm";c.textContent="閉じる";
+  c.onclick=function(){ if(d.parentNode) d.parentNode.removeChild(d); };
+  row.appendChild(c);d.appendChild(row);box.appendChild(d);
+}
+var SNZ=[];
+function notify(key,title,body,acts,ok){
+  acts=(acts||[]).slice();
+  if(ok&&NS.sz>0) acts.push({t:"あと"+NS.sz+"分",f:function(){ SNZ.push({t:Date.now()+NS.sz*60000,key:key,title:title,body:body,acts:(acts||[]).slice(0,-1),ok:ok}); }});
+  toast(title,body,acts);
+  if(NS.snd) beep();
+  if(NS.vib&&navigator.vibrate){ try{ navigator.vibrate([200,100,200]); }catch(e){} }
+  if(NS.sys&&("Notification" in window)&&Notification.permission==="granted"){
+    try{ new Notification(title,{body:body||"",tag:key,icon:"aikon.png"}); }catch(e){}
+  }
+  if(document.hidden){ try{ document.title="● "+title; }catch(e){} }
+}
+function startedToday(name){ var d0=day0(); return log.some(function(x){return x.n===name&&x.s>=d0;}); }
+function checkNotify(){
+  if(!NS.on) return;
+  var n=nowMin(), r=running(), ds=todayStr(), lead=NS.lead, ch=false;
+  for(var si=SNZ.length-1;si>=0;si--){ var z=SNZ[si]; if(Date.now()<z.t) continue; SNZ.splice(si,1); if(z.ok()) notify(z.key+":z"+Date.now(),"(あとで) "+z.title,z.body,z.acts,z.ok); }
+  (NS.fx||[]).forEach(function(f){
+    if(!f.on||!f.t) return;
+    var s=tm(f.t),k="f:"+f.id+":"+ds;
+    if(fired(k)||n<s||n>s+2) return;
+    markFired(k);
+    notify(k,f.l||"時間です",f.t+" の通知"+(r?"。いま「"+r.n+"」を実行中":""),r?[{t:"終了して次へ",f:endAndAdvance}]:[],function(){return true;});
+  });
+  if(NS.cal&&gcalConnected()){
+    CAL.forEach(function(ev){
+      if(ev.all||ev.sd!==ds||!ev.st) return;
+      var s=tm(ev.st),k="c:"+ev.id+":"+ds;
+      if(fired(k)||n<s-lead||n>s+1) return;
+      markFired(k);
+      if((r&&r.n===ev.name)||startedToday(ev.name)) return;
+      notify(k,ev.name,(n<s?"あと"+(s-n)+"分で開始(":"開始時刻(")+ev.st+")"+(r?"。いま「"+r.n+"」を実行中":""),
+        [{t:"開始",f:function(){start(ev.name,"cal",ev.detail,ev);}}],function(){var q=running();return !((q&&q.n===ev.name)||startedToday(ev.name));});
+    });
+  }
+  if(NS.tool){
+    TASKS.forEach(function(t){
+      if(!occurs(t,ds)) return;
+      if(t.m==="span"&&t.d1!==t.d2&&ds!==t.d1) return;
+      if(isSkipped(t.n)) return;
+      var s=tm(t.s),k="t:"+t.id+":"+ds;
+      if(fired(k)||n<s-lead||n>s+1) return;
+      markFired(k);
+      if((r&&r.n===t.n)||startedToday(t.n)) return;
+      notify(k,t.n,(n<s?"あと"+(s-n)+"分で開始(":"開始時刻(")+t.s+")"+(r?"。いま「"+r.n+"」を実行中":""),
+        [{t:r?"終了して開始":"開始",f:function(){start(t.n,true);}}],function(){var q=running();return !((q&&q.n===t.n)||startedToday(t.n));});
+    });
+  }
+  if(r){
+    if(NS.over&&r.p===true){
+      var pt=TT().filter(function(t){return t[0]===r.n;})[0];
+      if(pt&&pt[2]!=="23:59"){
+        var sm=tm(pt[1]),em=tm(pt[2]),ko="o:"+r.s;
+        if(em>sm&&n>=em&&r.s<day0()+em*60000&&!fired(ko)){
+          markFired(ko);
+          notify(ko,"「"+r.n+"」の予定時刻を過ぎた","予定は"+pt[2]+"まで。終わっていれば終了を押そう。",
+            [{t:"終了して次へ",f:endAndAdvance},{t:"まだ続ける"}],function(){var q=running();return !!q&&q.s===r.s;});
+        }
+      }
+    }
+    if(r.pe&&Date.now()>=r.pe&&!fired("e:"+r.s)){
+      markFired("e:"+r.s);
+      notify("e:"+r.s,"「"+r.n+"」の終了予定時刻("+fmt(r.pe)+")","終わっていれば終了を押そう。",
+        [{t:"終了して次へ",f:endAndAdvance},{t:"まだ続ける"}],function(){var q=running();return !!q&&q.s===r.s;});
+    }
+    if(r.nt&&r.ni&&Date.now()>=r.nt){
+      var kn="n:"+r.s+":"+r.nt;
+      r.nt=Date.now()+r.ni; save(); ch=true;
+      notify(kn,"「"+r.n+"」はまだ続いてる?("+dur(Date.now()-r.s)+"経過)","終わっていれば終了を押そう。次に声をかけるのは"+fmt(r.nt)+"。",
+        [{t:"終了して次へ",f:endAndAdvance},{t:"中断する",f:stopAll},{t:"続ける"}],function(){var q=running();return !!q&&q.s===r.s;});
+    }
+  }
+  if(ch) render();
+}
+function nsInit(){
+  $("nson").checked=!!NS.on;$("nslead").value=String(NS.lead);
+  $("nscal").checked=!!NS.cal;$("nstool").checked=!!NS.tool;$("nsover").checked=!!NS.over;
+  $("nssnd").checked=!!NS.snd;$("nsvib").checked=!!NS.vib;$("nssys").checked=!!NS.sys&&("Notification" in window)&&Notification.permission==="granted";
+  if(!("Notification" in window)){ $("nssys").disabled=true; NS.sys=false; }
+  if(!navigator.vibrate){ $("nsvib").disabled=true; }
+  [["nson","on"],["nscal","cal"],["nstool","tool"],["nsover","over"],["nssnd","snd"],["nsvib","vib"]].forEach(function(p){
+    $(p[0]).onchange=function(){ NS[p[1]]=$(p[0]).checked; saveNS(); if(p[0]==="nson") render(); };
+  });
+  $("nslead").onchange=function(){ NS.lead=+$("nslead").value; saveNS(); };
+  $("nssz").value=String(NS.sz);
+  $("nssz").onchange=function(){ NS.sz=+$("nssz").value; saveNS(); };
+  $("fxadd").onclick=function(){ NS.fx.push({id:uid(),t:"12:00",l:"",on:true}); saveNS(); fxRender(); };
+  fxRender();
+  $("nssys").onchange=function(){
+    if(!$("nssys").checked){ NS.sys=false; saveNS(); return; }
+    if(!("Notification" in window)){ $("nssys").checked=false; $("nsmsg").textContent="この端末のブラウザでは使えない"; return; }
+    Notification.requestPermission().then(function(p){
+      NS.sys=(p==="granted"); $("nssys").checked=NS.sys; saveNS();
+      $("nsmsg").textContent=NS.sys?"ブラウザの通知を許可した":"許可されなかった。ブラウザの設定で許可すると使える";
+    });
+  };
+  $("nstest").onclick=function(){ audioUnlock(); notify("test","テスト通知","通知はこのように出る。",[{t:"OK"}]); };
+  $("nmsel").onchange=function(){
+    var v=+$("nmsel").value,r=running();
+    NS.nm=v; saveNS();
+    if(r){ if(v>0){r.ni=v*60000;r.nt=Date.now()+r.ni;}else{r.ni=0;r.nt=null;} save(); }
+    render();
+  };
+}
+function fxRender(){
+  var box=$("fxlist"); box.innerHTML="";
+  NS.fx.forEach(function(f,i){
+    var d=document.createElement("div");d.className="row";d.style.marginTop="8px";
+    var c=document.createElement("input");c.type="checkbox";c.checked=!!f.on;c.style.cssText="width:20px;height:20px;flex:none";
+    c.onchange=function(){f.on=c.checked;saveNS();};
+    var t=document.createElement("input");t.type="time";t.value=f.t;t.style.flex="none";t.style.width="110px";
+    t.onchange=function(){f.t=t.value;saveNS();};
+    var l=document.createElement("input");l.type="text";l.value=f.l;l.placeholder="メモ(例: 昼休憩)";
+    l.onchange=function(){f.l=l.value;saveNS();};
+    var x=document.createElement("button");x.className="ghost sm";x.textContent="削除";
+    x.onclick=function(){NS.fx.splice(i,1);saveNS();fxRender();};
+    [c,t,l,x].forEach(function(e){d.appendChild(e);}); box.appendChild(d);
+  });
+  if(!NS.fx.length){ var m=document.createElement("div");m.className="meta";m.textContent="まだない";box.appendChild(m); }
+}
+setInterval(checkNotify,10000);
+document.addEventListener("visibilitychange",function(){ if(!document.hidden) checkNotify(); });
+window.addEventListener("focus",checkNotify);
+
 // ===== 画面描画 =====
 function render(){
   updateGcalStatus();
@@ -654,6 +857,8 @@ function render(){
     var meta=fmt(r.s)+"から "+dur(Date.now()-r.s);
     var pt=L.filter(function(t){return t[0]===r.n;})[0];
     if(pt){ meta+=" / 予定 "+pt[1]+"〜"+pt[2]; $("herobarwrap").hidden=false; $("herobar").style.width=Math.min(100,Math.round((Date.now()-r.s)/60000/plen(pt)*100))+"%"; }
+    if(NS.on&&r.nt) meta+=" / 次に声をかける "+fmt(r.nt);
+    if(r.pe) meta+=" / 終了予定 "+fmt(r.pe);
     $("nowmeta").textContent=meta;
     $("nowdetail").textContent=(pt&&pt[3])?pt[3]:(r.dt||"");
     var pz0=(r.p===false)?lastPaused(r.n):null;
@@ -681,6 +886,9 @@ function render(){
     $("nowdetail").textContent=sg.t[3]||"";
     btn.onclick=function(){start(sg.t[0],true);};
   }
+  $("nrow").hidden=!NS.on;
+  var nm0=r?(r.ni?Math.round(r.ni/60000):0):NS.nm;
+  if(document.activeElement!==$("nmsel")) $("nmsel").value=String(nm0);
   renderTasks(r); renderPaused(); renderRes();
 }
 function mkItem(o){
@@ -1053,7 +1261,34 @@ $("copybtn").onclick=function(){
     if(!ok){var ta=$("copyarea");ta.hidden=false;ta.value=t;}
   });
 };
-$("adbtn").onclick=function(){var v=$("ad").value.trim();if(!v)return;$("ad").value="";start(v,false);};
+function askEnd(name){
+  var sel={m:0,t:""};
+  var ov=document.createElement("div");
+  ov.style.cssText="position:fixed;inset:0;z-index:60;background:rgba(10,14,40,.55);display:flex;align-items:flex-end;justify-content:center;padding:12px";
+  var bx=document.createElement("div");
+  bx.style.cssText="background:var(--card);color:var(--ink);border-radius:22px;padding:20px;width:100%;max-width:496px;margin-bottom:env(safe-area-inset-bottom,0px)";
+  bx.innerHTML="<b style='font-size:18px'></b><div class='meta' style='margin:4px 0 12px'>終了時間はどうする?時刻になったら通知で知らせる。</div><div class='row' id='aeopts' style='flex-wrap:wrap'></div><div class='row' style='margin-top:10px'><span class='meta' style='flex:none'>時刻で指定</span><input type='time' id='aetime' style='flex:none;width:120px'></div><div class='row' style='margin-top:16px'><button class='ghost' id='aecancel'>やめる</button><button class='big' id='aeok' style='margin:0;padding:12px'>開始</button></div>";
+  bx.firstChild.textContent="「"+name+"」を始める";
+  ov.appendChild(bx);document.body.appendChild(ov);
+  var box=bx.querySelector("#aeopts"),tin=bx.querySelector("#aetime"),btns=[];
+  function paint(){ btns.forEach(function(x){ var on=x.m===sel.m&&!sel.t; x.b.style.cssText="padding:9px 14px;border-radius:99px;border:1px solid var(--line);font:inherit;font-size:14px;font-weight:700;cursor:pointer;"+(on?"background:var(--acc);color:var(--accink)":"background:var(--bg);color:var(--ink)"); }); }
+  [[0,"終了予定なし"],[15,"15分後"],[30,"30分後"],[60,"1時間後"]].forEach(function(o){
+    var b=document.createElement("button");b.textContent=o[1];btns.push({b:b,m:o[0]});
+    b.onclick=function(){ sel.m=o[0];sel.t="";tin.value="";paint(); }; box.appendChild(b);
+  });
+  tin.onchange=function(){ sel.t=tin.value; paint(); };
+  paint();
+  function close(){ document.body.removeChild(ov); }
+  bx.querySelector("#aecancel").onclick=close;
+  ov.onclick=function(e){ if(e.target===ov) close(); };
+  bx.querySelector("#aeok").onclick=function(){
+    var pe=0;
+    if(sel.t){ var m=tm(sel.t),d=new Date();d.setHours(Math.floor(m/60),m%60,0,0); if(d.getTime()<=Date.now()){ tin.style.borderColor="var(--warn)"; tin.value=""; sel.t=""; paint(); return; } pe=d.getTime(); }
+    else if(sel.m>0) pe=Date.now()+sel.m*60000;
+    close(); $("ad").value=""; start(name,false,null,null,pe);
+  };
+}
+$("adbtn").onclick=function(){ var v=$("ad").value.trim(); if(!v) return; audioUnlock(); askEnd(v); };
 $("ad").addEventListener("keydown",function(e){if(e.key==="Enter")$("adbtn").click();});
 $("reset").onclick=function(){
   if(!confirm("今日の記録を消す?")) return;
@@ -1061,7 +1296,7 @@ $("reset").onclick=function(){
 };
 $("resetall").onclick=function(){
   if(!confirm("この端末のデータを削除する?ツールタスク・記録・Google連携の情報が消える。Googleに保存済みのバックアップは残り、次に連携すると復元される。")) return;
-  try{[KEY,TKEY1,TKEY2,TSKEY,SKKEY,GTOKKEY,PKEY,PXKEY,PXDRAFT].forEach(function(k){localStorage.removeItem(k);});}catch(e){}
+  try{[KEY,TKEY1,TKEY2,TSKEY,SKKEY,GTOKKEY,PKEY,PXKEY,PXDRAFT,NKEY,FKEY].forEach(function(k){localStorage.removeItem(k);});}catch(e){}
   location.reload();
 };
 var PANES=["home","tool","cal","rec"];
@@ -1073,7 +1308,8 @@ function showPane(n){
 }
 PANES.forEach(function(p){$("n-"+p).onclick=function(){showPane(p);};});
 window.addEventListener("load",initGcal);
-render();renderToolList();
+nsInit();
+render();renderToolList();checkNotify();
 setInterval(render,20000);
 </script>
 </body>
