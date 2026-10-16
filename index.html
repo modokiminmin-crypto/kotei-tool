@@ -304,7 +304,7 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
       <details style="margin-top:8px"><summary>LINE通知の設定手順(1回だけ)</summary>
         <ol class="note">
           <li>上の「新しいコードをコピー」を押し、Apps Scriptのコードを全部消して貼り付けて保存。(いまの接続キーが入ったコードになる)</li>
-          <li>Apps Script左の歯車「プロジェクトの設定」→ いちばん下「スクリプト プロパティ」で2つ追加。<b>LINE_TOKEN</b>=長期チャネルアクセストークン、<b>LINE_USER</b>=自分のユーザーID。※ここ以外(このアプリ・チャット)には貼らない。</li>
+          <li>Apps Script左の歯車「プロジェクトの設定」→ いちばん下「スクリプト プロパティ」で2つ追加。<b>LINE_TOKEN</b>=長期チャネルアクセストークン、<b>LINE_USER</b>=自分のユーザーID(わからなければ省略可。その場合は公式アカウントの友だち全員に送る)。※ここ以外(このアプリ・チャット)には貼らない。</li>
           <li>上のメニューで関数 <b>kSetup</b> を選んで「実行」。許可を求められたら許可。(1分ごとの自動チェックが作られる)</li>
           <li>「デプロイ」→「デプロイを管理」→ 鉛筆 → バージョン「新バージョン」→「デプロイ」。</li>
           <li>関数 <b>kTest</b> を実行して、LINEにテストが届けばOK。</li>
@@ -1188,14 +1188,16 @@ function kLine(l){
 }
 function kPush(text){
   var P=PropertiesService.getScriptProperties();
-  var r=UrlFetchApp.fetch("https://api.line.me/v2/bot/message/push",{method:"post",contentType:"application/json",
+  var u=P.getProperty("LINE_USER"), body={messages:[{type:"text",text:text.slice(0,4500)}]};
+  if(u) body.to=u;
+  var r=UrlFetchApp.fetch("https://api.line.me/v2/bot/message/"+(u?"push":"broadcast"),{method:"post",contentType:"application/json",
     headers:{Authorization:"Bearer "+P.getProperty("LINE_TOKEN")},
-    payload:JSON.stringify({to:P.getProperty("LINE_USER"),messages:[{type:"text",text:text.slice(0,4500)}]}),muteHttpExceptions:true});
+    payload:JSON.stringify(body),muteHttpExceptions:true});
   return r.getResponseCode()===200;
 }
 function kTick(){
   var P=PropertiesService.getScriptProperties(), raw=P.getProperty("PLAN");
-  if(!raw||!P.getProperty("LINE_TOKEN")||!P.getProperty("LINE_USER")) return;
+  if(!raw||!P.getProperty("LINE_TOKEN")) return;
   var pl=JSON.parse(raw), now=Date.now(), d=Utilities.formatDate(new Date(),"Asia/Tokyo","yyyy-MM-dd"), ym=d.slice(0,7);
   if(pl.d!==d) return;
   var S=JSON.parse(P.getProperty("SENT")||"{}"); if(S.d!==d) S={d:d,k:[],n:0};
