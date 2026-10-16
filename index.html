@@ -295,9 +295,25 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
       <label class="chk"><input type="checkbox" id="nssnd">音</label>
       <label class="chk"><input type="checkbox" id="nsvib">バイブ(Androidのみ。iPhoneは非対応)</label>
       <label class="chk"><input type="checkbox" id="nssys">ブラウザの通知(PCのブラウザ向け)</label>
+      <label class="fl">LINE通知(アプリを閉じていても・ロック中でも届く)</label>
+      <label class="chk"><input type="checkbox" id="nsln">LINEにも送る(開始前・終了時刻超過・声かけは最大2回)</label>
+      <label class="fl" for="nslc">1日に送る上限(無料枠は月200通)</label>
+      <select id="nslc"><option value="3">3通</option><option value="6">6通</option><option value="10">10通</option><option value="15">15通</option></select>
+      <div class="meta" id="lnuse"></div>
+      <div class="row" style="margin-top:8px"><button class="ghost sm" id="lncopy">LINE用の新しいコードをコピー</button></div>
+      <details style="margin-top:8px"><summary>LINE通知の設定手順(1回だけ)</summary>
+        <ol class="note">
+          <li>上の「新しいコードをコピー」を押し、Apps Scriptのコードを全部消して貼り付けて保存。(いまの接続キーが入ったコードになる)</li>
+          <li>Apps Script左の歯車「プロジェクトの設定」→ いちばん下「スクリプト プロパティ」で2つ追加。<b>LINE_TOKEN</b>=長期チャネルアクセストークン、<b>LINE_USER</b>=自分のユーザーID。※ここ以外(このアプリ・チャット)には貼らない。</li>
+          <li>上のメニューで関数 <b>kSetup</b> を選んで「実行」。許可を求められたら許可。(1分ごとの自動チェックが作られる)</li>
+          <li>「デプロイ」→「デプロイを管理」→ 鉛筆 → バージョン「新バージョン」→「デプロイ」。</li>
+          <li>関数 <b>kTest</b> を実行して、LINEにテストが届けばOK。</li>
+          <li>このアプリで「LINEにも送る」をオン。</li>
+        </ol>
+      </details>
       <div class="row" style="margin-top:10px"><button class="ghost" id="nstest">テスト通知</button></div>
       <div class="meta" id="nsmsg" style="margin-top:8px"></div>
-      <div class="note">この通知は<b>アプリを開いている間だけ</b>動く。閉じている間やロック中は鳴らない。「定期的に声をかける」は、タスクの実行中に、選んだ間隔で「まだ続いてる?終わっていれば終了を押そう」と知らせる(終了か中断を押すまでくり返す)。閉じていても欲しい予定は、Googleカレンダー側の通知を使うか、今後追加予定のLINE通知を使う。</div>
+      <div class="note">この通知は<b>アプリを開いている間だけ</b>動く。閉じている間やロック中は鳴らない。「定期的に声をかける」は、タスクの実行中に、選んだ間隔で「まだ続いてる?終わっていれば終了を押そう」と知らせる(終了か中断を押すまでくり返す)。閉じていても欲しい予定は、LINE通知(上の設定)を使う。LINEには、その日にアプリを開いたとき見えていた予定が登録されるので、<b>1日1回はアプリを開く</b>必要がある。時刻指定の通知とスヌーズはアプリ内だけ。</div>
     </section>
   </div>
   <div class="ver" id="ver"></div>
@@ -308,7 +324,7 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
 
 <script>
 // バージョン(更新するたびに数字を1つ上げる)
-var VERSION="1.09";
+var VERSION="1.10";
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function p2(n){return ("0"+n).slice(-2);}
@@ -680,7 +696,7 @@ function endAndAdvance(){
 
 // ===== 通知(アプリを開いている間だけ動く) =====
 var NKEY="kotei_notify_v1", FKEY="kotei_fired_v1";
-var NS={on:true,lead:5,cal:true,tool:true,over:true,snd:true,vib:true,sys:false,nm:0,sz:5,fx:[]};
+var NS={on:true,lead:5,cal:true,tool:true,over:true,snd:true,vib:true,sys:false,nm:0,sz:5,fx:[],ln:false,lc:6};
 try{ var n0=JSON.parse(localStorage.getItem(NKEY)); if(n0&&typeof n0==="object"){ for(var nk in NS){ if(n0[nk]!==undefined) NS[nk]=n0[nk]; } } }catch(e){}
 function saveNS(){ try{ localStorage.setItem(NKEY,JSON.stringify(NS)); }catch(e){} }
 var FIRED={d:todayStr(),k:[]};
@@ -731,6 +747,7 @@ function notify(key,title,body,acts,ok){
 }
 function startedToday(name){ var d0=day0(); return log.some(function(x){return x.n===name&&x.s>=d0;}); }
 function checkNotify(){
+  linePush();
   if(!NS.on) return;
   var n=nowMin(), r=running(), ds=todayStr(), lead=NS.lead, ch=false;
   for(var si=SNZ.length-1;si>=0;si--){ var z=SNZ[si]; if(Date.now()<z.t) continue; SNZ.splice(si,1); if(z.ok()) notify(z.key+":z"+Date.now(),"(あとで) "+z.title,z.body,z.acts,z.ok); }
@@ -801,6 +818,13 @@ function nsInit(){
     $(p[0]).onchange=function(){ NS[p[1]]=$(p[0]).checked; saveNS(); if(p[0]==="nson") render(); };
   });
   $("nslead").onchange=function(){ NS.lead=+$("nslead").value; saveNS(); };
+  $("nsln").checked=!!NS.ln; $("nslc").value=String(NS.lc); lineUse();
+  $("nsln").onchange=function(){ NS.ln=$("nsln").checked; if(!NS.ln) LP="clear"; saveNS(); lineUse(); linePush(); };
+  $("nslc").onchange=function(){ NS.lc=+$("nslc").value; saveNS(); LP=""; linePush(); };
+  $("lncopy").onclick=function(){
+    if(!PROXY){ $("nsmsg").textContent="先に「カレンダー」タブで常時連携(Apps Script)を設定してね"; return; }
+    copyText(pxCode(PROXY.key)).then(function(ok){ $("nsmsg").textContent=ok?"コードをコピーした。手順1から進めてね":"自動コピーできなかった。カレンダータブの常時連携のコード欄から長押しでコピーして"; });
+  };
   $("nssz").value=String(NS.sz);
   $("nssz").onchange=function(){ NS.sz=+$("nssz").value; saveNS(); };
   $("fxadd").onclick=function(){ NS.fx.push({id:uid(),t:"12:00",l:"",on:true}); saveNS(); fxRender(); };
@@ -1116,6 +1140,78 @@ $("gcalbtn").onclick=function(){
 };
 $("gbbtn").onclick=$("gcalbtn").onclick;
 
+// ===== LINE通知(送信はApps Script側。トークンはここに置かない) =====
+var LP="", LM=null, LERR=false;
+function lineItems(){
+  var ds=todayStr(), r=running(), L=NS.lead, d0=day0(), it=[];
+  function add(id,min,x){ it.push({id:id+":"+ds,t:d0+min*60000,x:x}); }
+  function soon(id,name,st){
+    if((r&&r.n===name)||startedToday(name)) return;
+    add(id,tm(st)-L,"⏰ "+name+"\n"+(L>0?"あと"+L+"分で開始("+st+")":"開始時刻("+st+")"));
+  }
+  if(NS.cal) CAL.forEach(function(ev){ if(!ev.all&&ev.sd===ds&&ev.st) soon("c:"+ev.id,ev.name,ev.st); });
+  if(NS.tool) TASKS.forEach(function(t){
+    if(!occurs(t,ds)||(t.m==="span"&&t.d1!==t.d2&&ds!==t.d1)||isSkipped(t.n)) return;
+    soon("t:"+t.id,t.n,t.s);
+  });
+  if(r){
+    if(NS.over&&r.p===true){
+      var pt=TT().filter(function(t){return t[0]===r.n;})[0];
+      if(pt&&pt[2]!=="23:59"&&tm(pt[2])>tm(pt[1])&&r.s<d0+tm(pt[2])*60000)
+        add("o:"+r.s,tm(pt[2]),"⚠️ 「"+r.n+"」の予定時刻("+pt[2]+")を過ぎた。終わっていればアプリで終了を押そう。");
+    }
+    if(r.pe) it.push({id:"e:"+r.s,t:r.pe,x:"⚠️ 「"+r.n+"」の終了予定時刻("+fmt(r.pe)+")。終わっていればアプリで終了を押そう。"});
+    if(r.ni>0) for(var k=1;k<=2;k++) it.push({id:"n:"+r.s+":"+k,t:r.s+k*r.ni,x:"🕐 「"+r.n+"」はまだ続いてる?("+dur(k*r.ni)+"経過)"});
+  }
+  return it;
+}
+function lineUse(){
+  var e=$("lnuse"); if(!e) return;
+  e.textContent=!NS.ln?"":(LERR?"Apps Scriptのコードが古い。「新しいコードをコピー」で差し替えて、手順4まで進めてね":(LM===null?"":"今月のLINE通知 "+LM+" / 200通"+(LM>=160?"(多め。200通で止まる)":"")));
+}
+function linePush(){
+  if(!PROXY||!calAt) return;
+  if(!NS.ln&&LP==="") return;
+  var body=JSON.stringify({d:todayStr(),cap:NS.lc||6,items:NS.ln?lineItems():[]});
+  if(body===LP) return; LP=body;
+  fetch(PROXY.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({key:PROXY.key,line:JSON.parse(body)})})
+    .then(function(r){return r.json();})
+    .then(function(d){ if(d&&d.ok){LM=d.month;LERR=false;}else{LERR=true;} lineUse(); })
+    .catch(function(){ LP=""; });
+}
+// ---- 以下3つはApps Script側で動く(pxCodeが文字として埋め込む。このページでは実行しない) ----
+function kLine(l){
+  var P=PropertiesService.getScriptProperties();
+  P.setProperty("PLAN",JSON.stringify(l));
+  var ym=Utilities.formatDate(new Date(),"Asia/Tokyo","yyyy-MM");
+  return {ok:1,month:Number(P.getProperty("M_"+ym))||0};
+}
+function kPush(text){
+  var P=PropertiesService.getScriptProperties();
+  var r=UrlFetchApp.fetch("https://api.line.me/v2/bot/message/push",{method:"post",contentType:"application/json",
+    headers:{Authorization:"Bearer "+P.getProperty("LINE_TOKEN")},
+    payload:JSON.stringify({to:P.getProperty("LINE_USER"),messages:[{type:"text",text:text.slice(0,4500)}]}),muteHttpExceptions:true});
+  return r.getResponseCode()===200;
+}
+function kTick(){
+  var P=PropertiesService.getScriptProperties(), raw=P.getProperty("PLAN");
+  if(!raw||!P.getProperty("LINE_TOKEN")||!P.getProperty("LINE_USER")) return;
+  var pl=JSON.parse(raw), now=Date.now(), d=Utilities.formatDate(new Date(),"Asia/Tokyo","yyyy-MM-dd"), ym=d.slice(0,7);
+  if(pl.d!==d) return;
+  var S=JSON.parse(P.getProperty("SENT")||"{}"); if(S.d!==d) S={d:d,k:[],n:0};
+  var due=(pl.items||[]).filter(function(it){return it.t<=now&&now-it.t<600000&&S.k.indexOf(it.id)<0;});
+  if(!due.length) return;
+  due.forEach(function(it){S.k.push(it.id);});
+  var m=Number(P.getProperty("M_"+ym))||0;
+  if(S.n<(pl.cap||6)&&m<200&&kPush(due.map(function(it){return it.x;}).join("\n\n"))){ S.n++; P.setProperty("M_"+ym,String(m+1)); }
+  P.setProperty("SENT",JSON.stringify(S));
+}
+function kSetup(){
+  ScriptApp.getProjectTriggers().forEach(function(t){ if(t.getHandlerFunction()==="kTick") ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger("kTick").timeBased().everyMinutes(1).create();
+}
+function kTest(){ Logger.log(kPush("✅ 工程管理ツールのLINE通知テスト")?"送信OK":"送信失敗(トークンとユーザーIDを確認)"); }
+
 // ===== 常時連携の設定画面 =====
 function pxDraftKey(){
   var k="";try{k=localStorage.getItem(PXDRAFT)||"";}catch(e){}
@@ -1136,6 +1232,7 @@ function pxCode(k){
     '    var base="https://www.googleapis.com/calendar/v3/calendars/";',
     '    var okUrl=typeof q.url==="string"&&(q.url.indexOf(base+"primary/events")===0||q.url.indexOf(base+"ja.japanese")===0);',
     '    if(q.key!==KEY){out={kotei:1,error:{code:403,message:"key"}};}',
+    '    else if(q.line){out=kLine(q.line);}',
     '    else if(!okUrl){out={kotei:1,error:{code:400,message:"url"}};}',
     '    else{',
     '      var opt={method:String(q.method||"GET").toLowerCase(),headers:{Authorization:"Bearer "+ScriptApp.getOAuthToken()},muteHttpExceptions:true};',
@@ -1147,7 +1244,7 @@ function pxCode(k){
     '  return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);',
     '}',
     'function _scope(){CalendarApp.getDefaultCalendar();}'
-  ].join("\n");
+  ].concat([kLine,kPush,kTick,kSetup,kTest].map(function(f){return String(f);})).join("\n");
 }
 function pxMsg(t,ok){var e=$("pxmsg");e.textContent=t;e.className="meta "+(ok?"ok":"warn");}
 function pxErr(d,fallback){
