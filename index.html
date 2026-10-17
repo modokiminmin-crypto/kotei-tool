@@ -325,7 +325,7 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
 
 <script>
 // バージョン(更新するたびに数字を1つ上げる)
-var VERSION="1.12";
+var VERSION="1.13";
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function p2(n){return ("0"+n).slice(-2);}
@@ -1248,7 +1248,7 @@ function kTick(){
   P.setProperty("SENT",JSON.stringify(S));
 }
 function kLog(P,t){ P.setProperty("HOOK_LOG",Utilities.formatDate(new Date(),"Asia/Tokyo","MM/dd HH:mm:ss")+" "+t); }
-function kDebug(){ Logger.log(PropertiesService.getScriptProperties().getProperty("HOOK_LOG")||"LINEからの受信記録なし"); }
+function kDebug(){ var P=PropertiesService.getScriptProperties(); Logger.log("POST_LOG: "+P.getProperty("POST_LOG")+"\nHOOK_LOG: "+P.getProperty("HOOK_LOG")+"\nERR_LOG: "+P.getProperty("ERR_LOG")); }
 function kReply(tk,token,m){
   var r=UrlFetchApp.fetch("https://api.line.me/v2/bot/message/reply",{method:"post",contentType:"application/json",
     headers:{Authorization:"Bearer "+tk},payload:JSON.stringify({replyToken:token,messages:[m]}),muteHttpExceptions:true});
@@ -1311,7 +1311,7 @@ function pxCode(k){
     '  var out;',
     '  try{',
     '    var q=JSON.parse(e.postData.contents);',
-    '    if(q.events){if(q.events.length)kHook(q);return ContentService.createTextOutput("ok");}',
+    '    if(q.events){PropertiesService.getScriptProperties().setProperty("POST_LOG",new Date()+" events="+q.events.length);if(q.events.length)kHook(q);return ContentService.createTextOutput("ok");}',
     '    var base="https://www.googleapis.com/calendar/v3/calendars/";',
     '    var okUrl=typeof q.url==="string"&&(q.url.indexOf(base+"primary/events")===0||q.url.indexOf(base+"ja.japanese")===0);',
     '    if(q.key!==KEY){out={kotei:1,error:{code:403,message:"key"}};}',
@@ -1324,7 +1324,7 @@ function pxCode(k){
     '      var t=UrlFetchApp.fetch(q.url,opt).getContentText();',
     '      out=t?JSON.parse(t):{ok:1};',
     '    }',
-    '  }catch(err){out={kotei:1,error:{code:500,message:String(err)}};}',
+    '  }catch(err){out={kotei:1,error:{code:500,message:String(err)}};try{PropertiesService.getScriptProperties().setProperty("ERR_LOG",new Date()+" "+String(err));}catch(x){}}',
     '  return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);',
     '}',
     'function _scope(){CalendarApp.getDefaultCalendar();}'
