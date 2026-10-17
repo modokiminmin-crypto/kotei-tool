@@ -300,7 +300,7 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
       <label class="fl" for="nslc">1日に送る上限(無料枠は月200通)</label>
       <select id="nslc"><option value="3">3通</option><option value="6">6通</option><option value="10">10通</option><option value="15">15通</option></select>
       <div class="meta" id="lnuse"></div>
-      <div class="note">LINEで「開始」(ツール/予定/割り込みを選べる)・「割り込み 名前」・「終了」・「中断」と送ると操作できる。アプリを開くと、送った時刻のまま記録に反映される。使うには、LINE DevelopersのWebhookに、Apps ScriptのURL(…/exec)を設定して「Webhookの利用」をオンにする。</div>
+      <div class="note">LINEで「開始」(ツール/予定/割り込みを選べる)・「割り込み 名前」・「終了」・「中断」と送ると操作できる。ツール・割り込み・終了は、Googleカレンダーにすぐ記録され、アプリを開くと実績にも反映される。予定の開始だけは、アプリを開いたとき反映される。使うには、LINE DevelopersのWebhookに、Apps ScriptのURL(…/exec)を設定して「Webhookの利用」をオンにする。</div>
       <div class="row" style="margin-top:8px"><button class="ghost sm" id="lncopy">LINE用の新しいコードをコピー</button></div>
       <details style="margin-top:8px"><summary>LINE通知の設定手順(1回だけ)</summary>
         <ol class="note">
@@ -325,7 +325,7 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
 
 <script>
 // バージョン(更新するたびに数字を1つ上げる)
-var VERSION="1.14";
+var VERSION="1.15";
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function p2(n){return ("0"+n).slice(-2);}
@@ -341,7 +341,7 @@ function plen(t){var d=tm(t[2])-tm(t[1]);return d<=0?d+1440:d;}
 function nowMin(){var d=new Date();return d.getHours()*60+d.getMinutes();}
 function fmt(ms){var d=new Date(ms);return p2(d.getHours())+":"+p2(d.getMinutes());}
 function dur(ms){var m=Math.round(ms/60000);return m>=60?Math.floor(m/60)+"時間"+(m%60)+"分":m+"分";}
-var AT=0; function NOW(){return AT||Date.now();}
+var AT=0, NOCREATE=false; function NOW(){return AT||Date.now();}
 function day0(){var d=new Date();d.setHours(0,0,0,0);return d.getTime();}
 function inWin(t,n){var s=tm(t[1]),e=tm(t[2]);return s<e?(n>=s&&n<e):(n>=s||n<e);}
 
@@ -555,7 +555,7 @@ function gok(d){return !!d&&!d.error;}
 function gone(d){return !!d&&!!d.error&&(d.error.code===404||d.error.code===410);}
 function needSync(x){ if(x.s<day0()) return false; if(!x.gid) return true; if(x.ex&&!x.gs) return true; return x.e!==null&&x.ge!==x.e; }
 function gcalCreate(entry,detail){
-  if(!gcalConnected()||entry.gid||!lock(entry)) return;
+  if(NOCREATE||!gcalConnected()||entry.gid||!lock(entry)) return;
   var useE=entry.e, end=useE?Math.max(useE,entry.s+1000):entry.s+60000;
   gapi(EVURL,{method:"POST",body:JSON.stringify({summary:entry.n,description:(detail!=null?detail:entry.dt)||"",start:{dateTime:new Date(entry.s).toISOString()},end:{dateTime:new Date(end).toISOString()},extendedProperties:{"private":{koteiLog:"1"}}})})
     .then(function(d){ unlock(entry); if(gok(d)&&d.id){entry.gid=d.id; if(useE) entry.ge=useE; save(); if(entry.e&&entry.ge!==entry.e) gcalPatchEnd(entry);} }).catch(function(){unlock(entry);});
@@ -1176,17 +1176,18 @@ function lineMenu(){
 // LINEから届いた操作(開始・終了など)を取り込む。時刻はLINEで送った時刻にそろえる
 var LI=0, LDONE=[], LAST="";
 try{ LDONE=JSON.parse(localStorage.getItem("kotei_lops"))||[]; }catch(e){}
+function lineGid(o){ var e=running(); if(o.gid&&e&&e.n===o.n&&!e.gid){ e.gid=o.gid; save(); } }
 function lineApply(o){
   var r=running(); AT=o.t;
   LAST+=(LAST?" / ":"")+({tool:"開始 ",cal:"開始 ",int:"割り込み ",end:"終了 ",stop:"中断 "})[o.op]+(o.n||(r?r.n:"(実行中なし)"));
   try{
     if(o.op==="end"){ if(r) endAndAdvance(); }
     else if(o.op==="stop"){ if(r) stopAll(); }
-    else if(o.op==="int"){ if(!r||r.n!==o.n) start(o.n,false); }
-    else if(o.op==="tool"){ start(o.n,true); }
+    else if(o.op==="int"){ if(!r||r.n!==o.n){ NOCREATE=!!o.gid; start(o.n,false); NOCREATE=false; lineGid(o); } }
+    else if(o.op==="tool"){ NOCREATE=!!o.gid; start(o.n,true); NOCREATE=false; lineGid(o); }
     else if(o.op==="cal"){ var ev=CAL.filter(function(e){return e.name===o.n&&e.sd===todayStr();})[0]; start(o.n,"cal",ev?ev.detail:"",ev); }
   }catch(e){}
-  AT=0;
+  NOCREATE=false; AT=0;
 }
 function lineCall(o){
   o.key=PROXY.key;
@@ -1221,6 +1222,8 @@ function linePush(){
 // ---- 以下3つはApps Script側で動く(pxCodeが文字として埋め込む。このページでは実行しない) ----
 function kLine(l){
   var P=PropertiesService.getScriptProperties();
+  var R=JSON.parse(P.getProperty("RUN")||"null");
+  if(R&&l.menu&&l.menu.r!==R.n&&!JSON.parse(P.getProperty("OPS")||"[]").length) P.deleteProperty("RUN");
   P.setProperty("PLAN",JSON.stringify(l));
   var ym=Utilities.formatDate(new Date(),"Asia/Tokyo","yyyy-MM");
   return {ok:1,month:Number(P.getProperty("M_"+ym))||0};
@@ -1252,6 +1255,23 @@ function kTick(){
 }
 function kLog(P,t){ P.setProperty("HOOK_LOG",Utilities.formatDate(new Date(),"Asia/Tokyo","MM/dd HH:mm:ss")+" "+t); }
 function kDebug(){ var P=PropertiesService.getScriptProperties(); Logger.log("POST_LOG: "+P.getProperty("POST_LOG")+"\nHOOK_LOG: "+P.getProperty("HOOK_LOG")+"\nERR_LOG: "+P.getProperty("ERR_LOG")); }
+function kIso(t){ return new Date(t).toISOString(); }
+function kCal(method,id,body){
+  var r=UrlFetchApp.fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events"+(id?"/"+encodeURIComponent(id):""),
+    {method:method,contentType:"application/json",headers:{Authorization:"Bearer "+ScriptApp.getOAuthToken()},payload:JSON.stringify(body),muteHttpExceptions:true});
+  if(r.getResponseCode()>=300) return null;
+  try{ return JSON.parse(r.getContentText()); }catch(e){ return {}; }
+}
+function kRun(P,op,ts){
+  var R=JSON.parse(P.getProperty("RUN")||"null"), ok=false, N=null;
+  if(R&&R.gid&&kCal("patch",R.gid,{end:{dateTime:kIso(Math.max(ts,R.s+1000)),date:null}})) ok=true;
+  if(op.op==="tool"||op.op==="int"){
+    var g=kCal("post",null,{summary:op.n,description:"",start:{dateTime:kIso(ts)},end:{dateTime:kIso(ts+60000)},extendedProperties:{"private":{koteiLog:"1"}}});
+    if(g&&g.id){ op.gid=g.id; N={n:op.n,gid:g.id,s:ts}; ok=true; }
+  }
+  P.setProperty("RUN",JSON.stringify(N));
+  return ok&&op.op!=="cal";
+}
 function kReply(tk,token,m){
   var r=UrlFetchApp.fetch("https://api.line.me/v2/bot/message/reply",{method:"post",contentType:"application/json",
     headers:{Authorization:"Bearer "+tk},payload:JSON.stringify({replyToken:token,messages:[m]}),muteHttpExceptions:true});
@@ -1280,8 +1300,9 @@ function kHook(q){
     else { msg="使い方: 開始 / 終了 / 中断 / 割り込み 名前"; }
     if(op){
       op.id=ev.message.id; op.t=ev.timestamp;
+      var rec=kRun(P,op,ev.timestamp);
       var ops=JSON.parse(P.getProperty("OPS")||"[]"); ops.push(op); P.setProperty("OPS",JSON.stringify(ops));
-      msg=({tool:"▶ ",cal:"▶ ",int:"▶ 割り込み ",end:"⏹ 終了 ",stop:"⏸ 中断 "})[op.op]+op.n+"("+hm+")を受け付けた。"+(op.op==="int"&&cur?"「"+cur+"」は中断中に入る。":"")+"アプリを開くと記録に反映される。";
+      msg=({tool:"▶ ",cal:"▶ ",int:"▶ 割り込み ",end:"⏹ 終了 ",stop:"⏸ 中断 "})[op.op]+op.n+"("+hm+")を受け付けた。"+(op.op==="int"&&cur?"「"+cur+"」は中断中に入る。":"")+(rec?"カレンダーには記録した。アプリを開くと実績にも反映される。":"アプリを開くと記録に反映される。");
     }
     var o={type:"text",text:msg}; if(qr&&qr.length) o.quickReply={items:qr};
     kReply(tk,ev.replyToken,o);
@@ -1332,7 +1353,7 @@ function pxCode(k){
     '  return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);',
     '}',
     'function _scope(){CalendarApp.getDefaultCalendar();}'
-  ].concat([kLine,kPush,kTick,kLog,kDebug,kReply,kHook,kOps,kSetup,kTest].map(function(f){return String(f);})).join("\n");
+  ].concat([kLine,kPush,kTick,kLog,kDebug,kIso,kCal,kRun,kReply,kHook,kOps,kSetup,kTest].map(function(f){return String(f);})).join("\n");
 }
 function pxMsg(t,ok){var e=$("pxmsg");e.textContent=t;e.className="meta "+(ok?"ok":"warn");}
 function pxErr(d,fallback){
