@@ -325,7 +325,7 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
 
 <script>
 // バージョン(更新するたびに数字を1つ上げる)
-var VERSION="1.13";
+var VERSION="1.14";
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function p2(n){return ("0"+n).slice(-2);}
@@ -1174,10 +1174,11 @@ function lineMenu(){
   return {t:TT().filter(function(x){return !isSkipped(x[0]);}).map(function(x){return x[0];}),c:c,r:r?r.n:""};
 }
 // LINEから届いた操作(開始・終了など)を取り込む。時刻はLINEで送った時刻にそろえる
-var LI=0, LDONE=[];
+var LI=0, LDONE=[], LAST="";
 try{ LDONE=JSON.parse(localStorage.getItem("kotei_lops"))||[]; }catch(e){}
 function lineApply(o){
   var r=running(); AT=o.t;
+  LAST+=(LAST?" / ":"")+({tool:"開始 ",cal:"開始 ",int:"割り込み ",end:"終了 ",stop:"中断 "})[o.op]+(o.n||(r?r.n:"(実行中なし)"));
   try{
     if(o.op==="end"){ if(r) endAndAdvance(); }
     else if(o.op==="stop"){ if(r) stopAll(); }
@@ -1195,13 +1196,15 @@ function linePoll(){
   if(!PROXY||!NS.ln||!calAt||Date.now()-LI<20000) return; LI=Date.now();
   lineCall({ops:"get"}).then(function(d){
     if(!d||!d.ops||!d.ops.length) return;
-    var ids=d.ops.map(function(o){return o.id;});
+    var ids=d.ops.map(function(o){return o.id;}); LAST="";
     d.ops.sort(function(a,b){return a.t-b.t;}).forEach(function(o){ if(LDONE.indexOf(o.id)<0){ lineApply(o); LDONE.push(o.id); } });
+    LAST="LINE操作を反映("+fmt(Date.now())+"): "+LAST; lineUse();
     LDONE=LDONE.slice(-60); try{ localStorage.setItem("kotei_lops",JSON.stringify(LDONE)); }catch(e){}
     return lineCall({ops:"ack",ids:ids});
   }).catch(function(){});
 }
-function lineUse(){
+function lineUse(){ lineUse0(); var e=$("lnuse"); if(e&&NS.ln&&LAST) e.textContent+=(e.textContent?" ｜ ":"")+LAST; }
+function lineUse0(){
   var e=$("lnuse"); if(!e) return;
   e.textContent=!NS.ln?"":(LERR?"Apps Scriptのコードが古い。「新しいコードをコピー」で差し替えて、手順4まで進めてね":(LM===null?"":"今月のLINE通知 "+LM+" / 200通"+(LM>=160?"(多め。200通で止まる)":"")));
 }
@@ -1262,6 +1265,8 @@ function kHook(q){
     if(!me){ P.setProperty("LINE_USER",uid); me=uid; kReply(tk,ev.replyToken,{type:"text",text:"登録できた。もう一度送ってね"}); return; }
     if(uid!==me||ev.type!=="message"||!ev.message||ev.message.type!=="text") return;
     var tx=ev.message.text.trim(), mn=(JSON.parse(P.getProperty("PLAN")||"{}").menu)||{t:[],c:[]};
+    var pend=JSON.parse(P.getProperty("OPS")||"[]"), cur=mn.r||"";
+    pend.forEach(function(o){ cur=(o.op==="end"||o.op==="stop")?"":(o.n||cur); });
     var hm=Utilities.formatDate(new Date(ev.timestamp),"Asia/Tokyo","HH:mm"), msg="", qr=null, op=null, m;
     function btns(a,pre){ return a.slice(0,13).map(function(n){return {type:"action",action:{type:"message",label:n.slice(0,20),text:pre+n}};}); }
     if(tx==="開始"){ msg="何を始める?"; qr=btns(["ツール","予定","割り込み"],"開始:"); }
@@ -1270,14 +1275,13 @@ function kHook(q){
     else if(tx==="開始:割り込み"){ msg="「割り込み 名前」の形で送ってね(例: 割り込み 電話)"; }
     else if(tx.indexOf("ツール:")===0){ op={op:"tool",n:tx.slice(4)}; }
     else if(tx.indexOf("予定:")===0){ op={op:"cal",n:tx.slice(3)}; }
-    else if(tx==="終了"){ op={op:"end",n:""}; }
-    else if(tx==="中断"){ op={op:"stop",n:""}; }
+    else if(tx==="終了"||tx==="中断"){ if(cur) op={op:tx==="終了"?"end":"stop",n:cur}; else msg="いま実行中のものがない(最後にアプリを開いた時点の状態で判断している)"; }
     else if((m=tx.match(/^割り込み[ 　]+(.+)/))){ op={op:"int",n:m[1]}; }
     else { msg="使い方: 開始 / 終了 / 中断 / 割り込み 名前"; }
     if(op){
       op.id=ev.message.id; op.t=ev.timestamp;
       var ops=JSON.parse(P.getProperty("OPS")||"[]"); ops.push(op); P.setProperty("OPS",JSON.stringify(ops));
-      msg=({tool:"▶ ",cal:"▶ ",int:"▶ 割り込み ",end:"⏹ 終了",stop:"⏸ 中断"})[op.op]+op.n+"("+hm+")を受け付けた。アプリを開くと記録に反映される。";
+      msg=({tool:"▶ ",cal:"▶ ",int:"▶ 割り込み ",end:"⏹ 終了 ",stop:"⏸ 中断 "})[op.op]+op.n+"("+hm+")を受け付けた。"+(op.op==="int"&&cur?"「"+cur+"」は中断中に入る。":"")+"アプリを開くと記録に反映される。";
     }
     var o={type:"text",text:msg}; if(qr&&qr.length) o.quickReply={items:qr};
     kReply(tk,ev.replyToken,o);
