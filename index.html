@@ -325,7 +325,7 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
 
 <script>
 // バージョン(更新するたびに数字を1つ上げる)
-var VERSION="1.11";
+var VERSION="1.12";
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function p2(n){return ("0"+n).slice(-2);}
@@ -1144,26 +1144,27 @@ $("gbbtn").onclick=$("gcalbtn").onclick;
 
 // ===== LINE通知(送信はApps Script側。トークンはここに置かない) =====
 var LP="", LM=null, LERR=false;
+var ENDB=[{l:"■ 終了",x:"終了"}];
 function lineItems(){
   var ds=todayStr(), r=running(), L=NS.lead, d0=day0(), it=[];
-  function add(id,min,x){ it.push({id:id+":"+ds,t:d0+min*60000,x:x}); }
-  function soon(id,name,st){
+  function add(id,min,x,b){ it.push({id:id+":"+ds,t:d0+min*60000,x:x,b:b}); }
+  function soon(id,name,st,pre){
     if((r&&r.n===name)||startedToday(name)) return;
-    add(id,tm(st)-L,"⏰ "+name+"\n"+(L>0?"あと"+L+"分で開始("+st+")":"開始時刻("+st+")"));
+    add(id,tm(st)-L,"⏰ "+name+"\n"+(L>0?"あと"+L+"分で開始("+st+")":"開始時刻("+st+")"),[{l:"▶ 開始",x:pre+name}]);
   }
-  if(NS.cal) CAL.forEach(function(ev){ if(!ev.all&&ev.sd===ds&&ev.st) soon("c:"+ev.id,ev.name,ev.st); });
+  if(NS.cal) CAL.forEach(function(ev){ if(!ev.all&&ev.sd===ds&&ev.st) soon("c:"+ev.id,ev.name,ev.st,"予定:"); });
   if(NS.tool) TASKS.forEach(function(t){
     if(!occurs(t,ds)||(t.m==="span"&&t.d1!==t.d2&&ds!==t.d1)||isSkipped(t.n)) return;
-    soon("t:"+t.id,t.n,t.s);
+    soon("t:"+t.id,t.n,t.s,"ツール:");
   });
   if(r){
     if(NS.over&&r.p===true){
       var pt=TT().filter(function(t){return t[0]===r.n;})[0];
       if(pt&&pt[2]!=="23:59"&&tm(pt[2])>tm(pt[1])&&r.s<d0+tm(pt[2])*60000)
-        add("o:"+r.s,tm(pt[2]),"⚠️ 「"+r.n+"」の予定時刻("+pt[2]+")を過ぎた。終わっていればアプリで終了を押そう。");
+        add("o:"+r.s,tm(pt[2]),"⚠️ 「"+r.n+"」の予定時刻("+pt[2]+")を過ぎた。終わっていれば「終了」と返信しよう。",ENDB);
     }
-    if(r.pe) it.push({id:"e:"+r.s,t:r.pe,x:"⚠️ 「"+r.n+"」の終了予定時刻("+fmt(r.pe)+")。終わっていればアプリで終了を押そう。"});
-    if(r.ni>0) for(var k=1;k<=2;k++) it.push({id:"n:"+r.s+":"+k,t:r.s+k*r.ni,x:"🕐 「"+r.n+"」はまだ続いてる?("+dur(k*r.ni)+"経過)"});
+    if(r.pe) it.push({id:"e:"+r.s,t:r.pe,x:"⚠️ 「"+r.n+"」の終了予定時刻("+fmt(r.pe)+")。終わっていれば「終了」と返信しよう。",b:ENDB});
+    if(r.ni>0) for(var k=1;k<=2;k++) it.push({id:"n:"+r.s+":"+k,t:r.s+k*r.ni,x:"🕐 「"+r.n+"」はまだ続いてる?("+dur(k*r.ni)+"経過)",b:ENDB});
   }
   return it;
 }
@@ -1221,10 +1222,11 @@ function kLine(l){
   var ym=Utilities.formatDate(new Date(),"Asia/Tokyo","yyyy-MM");
   return {ok:1,month:Number(P.getProperty("M_"+ym))||0};
 }
-function kPush(text){
+function kPush(text,qr){
   var P=PropertiesService.getScriptProperties();
   var u=P.getProperty("LINE_USER"), body={messages:[{type:"text",text:text.slice(0,4500)}]};
   if(u) body.to=u;
+  if(qr&&qr.length) body.messages[0].quickReply={items:qr.slice(0,13).map(function(b){return {type:"action",action:{type:"message",label:b.l.slice(0,20),text:b.x}};})};
   var r=UrlFetchApp.fetch("https://api.line.me/v2/bot/message/"+(u?"push":"broadcast"),{method:"post",contentType:"application/json",
     headers:{Authorization:"Bearer "+P.getProperty("LINE_TOKEN")},
     payload:JSON.stringify(body),muteHttpExceptions:true});
@@ -1240,17 +1242,23 @@ function kTick(){
   if(!due.length) return;
   due.forEach(function(it){S.k.push(it.id);});
   var m=Number(P.getProperty("M_"+ym))||0;
-  if(S.n<(pl.cap||6)&&m<200&&kPush(due.map(function(it){return it.x;}).join("\n\n"))){ S.n++; P.setProperty("M_"+ym,String(m+1)); }
+  var qr=[], seen={};
+  due.forEach(function(it){ (it.b||[]).forEach(function(b){ if(!seen[b.x]){seen[b.x]=1;qr.push(b);} }); });
+  if(S.n<(pl.cap||6)&&m<200&&kPush(due.map(function(it){return it.x;}).join("\n\n"),qr)){ S.n++; P.setProperty("M_"+ym,String(m+1)); }
   P.setProperty("SENT",JSON.stringify(S));
 }
+function kLog(P,t){ P.setProperty("HOOK_LOG",Utilities.formatDate(new Date(),"Asia/Tokyo","MM/dd HH:mm:ss")+" "+t); }
+function kDebug(){ Logger.log(PropertiesService.getScriptProperties().getProperty("HOOK_LOG")||"LINEからの受信記録なし"); }
 function kReply(tk,token,m){
-  UrlFetchApp.fetch("https://api.line.me/v2/bot/message/reply",{method:"post",contentType:"application/json",
+  var r=UrlFetchApp.fetch("https://api.line.me/v2/bot/message/reply",{method:"post",contentType:"application/json",
     headers:{Authorization:"Bearer "+tk},payload:JSON.stringify({replyToken:token,messages:[m]}),muteHttpExceptions:true});
+  kLog(PropertiesService.getScriptProperties(),"返信 "+r.getResponseCode()+" "+r.getContentText().slice(0,200));
 }
 function kHook(q){
   var P=PropertiesService.getScriptProperties(), tk=P.getProperty("LINE_TOKEN"), me=P.getProperty("LINE_USER");
   q.events.forEach(function(ev){
     var uid=ev.source&&ev.source.userId; if(!uid||!ev.replyToken) return;
+    kLog(P,"受信 "+(ev.message&&ev.message.text)+(me?(uid===me?"":" (登録済みIDと違うので無視)"):" (ID未登録)"));
     if(!me){ P.setProperty("LINE_USER",uid); me=uid; kReply(tk,ev.replyToken,{type:"text",text:"登録できた。もう一度送ってね"}); return; }
     if(uid!==me||ev.type!=="message"||!ev.message||ev.message.type!=="text") return;
     var tx=ev.message.text.trim(), mn=(JSON.parse(P.getProperty("PLAN")||"{}").menu)||{t:[],c:[]};
@@ -1320,7 +1328,7 @@ function pxCode(k){
     '  return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);',
     '}',
     'function _scope(){CalendarApp.getDefaultCalendar();}'
-  ].concat([kLine,kPush,kTick,kReply,kHook,kOps,kSetup,kTest].map(function(f){return String(f);})).join("\n");
+  ].concat([kLine,kPush,kTick,kLog,kDebug,kReply,kHook,kOps,kSetup,kTest].map(function(f){return String(f);})).join("\n");
 }
 function pxMsg(t,ok){var e=$("pxmsg");e.textContent=t;e.className="meta "+(ok?"ok":"warn");}
 function pxErr(d,fallback){
