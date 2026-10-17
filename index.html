@@ -301,7 +301,7 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
       <select id="nslc"><option value="3">3通</option><option value="6">6通</option><option value="10">10通</option><option value="15">15通</option></select>
       <div class="meta" id="lnuse"></div>
       <div class="note">LINEで「開始」(ツール/予定/割り込みを選べる)・「割り込み 名前」・「終了」・「中断」と送ると操作できる。ツール・割り込み・終了は、Googleカレンダーにすぐ記録され、アプリを開くと実績にも反映される。予定の開始だけは、アプリを開いたとき反映される。使うには、LINE DevelopersのWebhookに、Apps ScriptのURL(…/exec)を設定して「Webhookの利用」をオンにする。</div>
-      <div class="row" style="margin-top:8px"><button class="ghost sm" id="lncopy">LINE用の新しいコードをコピー</button></div>
+      <div class="row" style="margin-top:8px"><button class="ghost sm" id="lncopy">LINE用の新しいコードをコピー</button> <button class="ghost sm" id="lntest">10秒後にLINEテスト</button></div>
       <details style="margin-top:8px"><summary>LINE通知の設定手順(1回だけ)</summary>
         <ol class="note">
           <li>上の「新しいコードをコピー」を押し、Apps Scriptのコードを全部消して貼り付けて保存。(いまの接続キーが入ったコードになる)</li>
@@ -325,7 +325,7 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
 
 <script>
 // バージョン(更新するたびに数字を1つ上げる)
-var VERSION="1.17";
+var VERSION="1.18";
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function p2(n){return ("0"+n).slice(-2);}
@@ -823,6 +823,11 @@ function nsInit(){
   $("nsln").checked=!!NS.ln; $("nslc").value=String(NS.lc); lineUse();
   $("nsln").onchange=function(){ NS.ln=$("nsln").checked; if(!NS.ln) LP="clear"; saveNS(); lineUse(); linePush(); };
   $("nslc").onchange=function(){ NS.lc=+$("nslc").value; saveNS(); LP=""; linePush(); };
+  $("lntest").onclick=function(){
+    if(!PROXY){ $("nsmsg").textContent="先にカレンダータブで常時連携を設定してね"; return; }
+    lineCall({test:1}).catch(function(){});
+    $("nsmsg").textContent="10秒後にLINEへテストを送る(アプリは閉じてもOK)。届かなければ、Apps Scriptのコードが古い。";
+  };
   $("lncopy").onclick=function(){
     if(!PROXY){ $("nsmsg").textContent="先に「カレンダー」タブで常時連携(Apps Script)を設定してね"; return; }
     copyText(pxCode(PROXY.key)).then(function(ok){ $("nsmsg").textContent=ok?"コードをコピーした。手順1から進めてね":"自動コピーできなかった。カレンダータブの常時連携のコード欄から長押しでコピーして"; });
@@ -1202,6 +1207,7 @@ function linePoll(){
     d.ops.sort(function(a,b){return a.t-b.t;}).forEach(function(o){ if(LDONE.indexOf(o.id)<0){ lineApply(o); LDONE.push(o.id); } });
     LAST="LINE操作を反映("+fmt(Date.now())+"): "+LAST; lineUse(); toast("LINEの操作を反映した",LAST.replace(/^.*?\): /,"")); render();
     LDONE=LDONE.slice(-60); try{ localStorage.setItem("kotei_lops",JSON.stringify(LDONE)); }catch(e){}
+    LP=""; linePush();
     return lineCall({ops:"ack",ids:ids});
   }).catch(function(){});
 }
@@ -1256,8 +1262,9 @@ function kTick(){
   if(S.n<(pl.cap||6)&&m<200&&kPush(due.map(function(it){return it.x;}).join("\n\n"),qr)){ S.n++; P.setProperty("M_"+ym,String(m+1)); }
   P.setProperty("SENT",JSON.stringify(S));
 }
+function kT(){ Utilities.sleep(10000); kPush("✅ LINEテスト(10秒後に送信)"); return {ok:1}; }
 function kLog(P,t){ P.setProperty("HOOK_LOG",Utilities.formatDate(new Date(),"Asia/Tokyo","MM/dd HH:mm:ss")+" "+t); }
-function kDebug(){ var P=PropertiesService.getScriptProperties(); Logger.log("POST_LOG: "+P.getProperty("POST_LOG")+"\nHOOK_LOG: "+P.getProperty("HOOK_LOG")+"\nERR_LOG: "+P.getProperty("ERR_LOG")); }
+function kDebug(){ var P=PropertiesService.getScriptProperties(); Logger.log("POST_LOG: "+P.getProperty("POST_LOG")+"\nHOOK_LOG: "+P.getProperty("HOOK_LOG")+"\nERR_LOG: "+P.getProperty("ERR_LOG")+"\nRUN: "+P.getProperty("RUN")+"\nSENT: "+P.getProperty("SENT")+"\nPLAN上限: "+(JSON.parse(P.getProperty("PLAN")||"{}").cap)); }
 function kIso(t){ return new Date(t).toISOString(); }
 function kCal(method,id,body){
   var r=UrlFetchApp.fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events"+(id?"/"+encodeURIComponent(id):""),
@@ -1288,7 +1295,7 @@ function kHook(q){
     if(!me){ P.setProperty("LINE_USER",uid); me=uid; kReply(tk,ev.replyToken,{type:"text",text:"登録できた。もう一度送ってね"}); return; }
     if(uid!==me||ev.type!=="message"||!ev.message||ev.message.type!=="text") return;
     var tx=ev.message.text.trim(), mn=(JSON.parse(P.getProperty("PLAN")||"{}").menu)||{t:[],c:[]};
-    var pend=JSON.parse(P.getProperty("OPS")||"[]"), cur=mn.r||"";
+    var pend=JSON.parse(P.getProperty("OPS")||"[]"), cur=(JSON.parse(P.getProperty("RUN")||"null")||{}).n||mn.r||"";
     pend.forEach(function(o){ cur=(o.op==="end"||o.op==="stop")?"":(o.n||cur); });
     var hm=Utilities.formatDate(new Date(ev.timestamp),"Asia/Tokyo","HH:mm"), msg="", qr=null, op=null, m;
     function btns(a,pre){ return a.slice(0,13).map(function(n){return {type:"action",action:{type:"message",label:n.slice(0,20),text:pre+n}};}); }
@@ -1349,6 +1356,7 @@ function pxCode(k){
     '    if(q.key!==KEY){out={kotei:1,error:{code:403,message:"key"}};}',
     '    else if(q.line){out=kLine(q.line);}',
     '    else if(q.ops){out=kOps(q);}',
+    '    else if(q.test){out=kT();}',
     '    else if(!okUrl){out={kotei:1,error:{code:400,message:"url"}};}',
     '    else{',
     '      var opt={method:String(q.method||"GET").toLowerCase(),headers:{Authorization:"Bearer "+ScriptApp.getOAuthToken()},muteHttpExceptions:true};',
@@ -1360,7 +1368,7 @@ function pxCode(k){
     '  return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);',
     '}',
     'function _scope(){CalendarApp.getDefaultCalendar();}'
-  ].concat([kLine,kPush,kTick,kLog,kDebug,kIso,kCal,kRun,kReply,kHook,kOps,kSetup,kTest].map(function(f){return String(f);})).join("\n");
+  ].concat([kLine,kPush,kTick,kT,kLog,kDebug,kIso,kCal,kRun,kReply,kHook,kOps,kSetup,kTest].map(function(f){return String(f);})).join("\n");
 }
 function pxMsg(t,ok){var e=$("pxmsg");e.textContent=t;e.className="meta "+(ok?"ok":"warn");}
 function pxErr(d,fallback){
