@@ -300,7 +300,7 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
       <label class="fl" for="nslc">1日に送る上限(無料枠は月200通)</label>
       <select id="nslc"><option value="3">3通</option><option value="6">6通</option><option value="10">10通</option><option value="15">15通</option></select>
       <div class="meta" id="lnuse"></div>
-      <div class="note">LINEで「開始」(ツール/予定/割り込みを選べる)・「割り込み 名前」・「終了」・「中断」と送ると操作できる。ツール・割り込み・終了は、Googleカレンダーにすぐ記録され、アプリを開くと実績にも反映される。予定の開始だけは、アプリを開いたとき反映される。使うには、LINE DevelopersのWebhookに、Apps ScriptのURL(…/exec)を設定して「Webhookの利用」をオンにする。</div>
+      <div class="note">LINEで「開始」(ツール/予定/割り込みを選べる)・「割り込み 名前」・「終了」・「中断」と送ると操作できる。ツール・割り込み・終了は、Googleカレンダーにすぐ記録され、アプリを開くと実績にも反映される。予定の開始だけは、アプリを開いたとき反映される。終了予定のLINE通知は、予定時刻から最大1分ほど遅れる(1〜2分の短い予定だと、通知の前に終わって届かないことがある)。使うには、LINE DevelopersのWebhookに、Apps ScriptのURL(…/exec)を設定して「Webhookの利用」をオンにする。</div>
       <div class="row" style="margin-top:8px"><button class="ghost sm" id="lncopy">LINE用の新しいコードをコピー</button> <button class="ghost sm" id="lntest">10秒後にLINEテスト</button></div>
       <details style="margin-top:8px"><summary>LINE通知の設定手順(1回だけ)</summary>
         <ol class="note">
@@ -325,7 +325,7 @@ nav.tabs button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:
 
 <script>
 // バージョン(更新するたびに数字を1つ上げる)
-var VERSION="1.18";
+var VERSION="1.19";
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function p2(n){return ("0"+n).slice(-2);}
@@ -1316,7 +1316,7 @@ function kHook(q){
       }
       var rec=kRun(P,op,ev.timestamp);
       var ops=JSON.parse(P.getProperty("OPS")||"[]"); ops.push(op); P.setProperty("OPS",JSON.stringify(ops));
-      msg=({tool:"▶ ",cal:"▶ ",int:"▶ 割り込み ",end:"⏹ 終了 ",stop:"⏸ 中断 "})[op.op]+op.n+"("+hm+(op.pe?" 〜"+Utilities.formatDate(new Date(op.pe),"Asia/Tokyo","HH:mm"):"")+")を受け付けた。"+(op.op==="int"&&cur?"「"+cur+"」は中断中に入る。":"")+(rec?"カレンダーには記録した。アプリを開くと実績にも反映される。":"アプリを開くと記録に反映される。");
+      msg=({tool:"▶ ",cal:"▶ ",int:"▶ 割り込み ",end:"⏹ 終了 ",stop:"⏸ 中断 "})[op.op]+op.n+"("+hm+(op.pe?" 〜"+Utilities.formatDate(new Date(op.pe),"Asia/Tokyo","HH:mm"):"")+")を受け付けた。"+(op.pe&&op.pe-op.t<180000?"終了通知は最大1分ほど遅れる(短い時間だと届く前に終えることがある)。":"")+(op.op==="int"&&cur?"「"+cur+"」は中断中に入る。":"")+(rec?"カレンダーには記録した。アプリを開くと実績にも反映される。":"アプリを開くと記録に反映される。");
     }
     var o={type:"text",text:msg}; if(qr&&qr.length) o.quickReply={items:qr};
     kReply(tk,ev.replyToken,o);
